@@ -1,0 +1,4 @@
+.env
+
+# mantém o arquivo de exemplo no Git
+!.env.example
