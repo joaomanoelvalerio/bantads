@@ -15,7 +15,7 @@ services:
     mem_limit: 384m
     command: ["mongod", "--wiredTigerCacheSizeGB", "0.25"]
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand(ping)"]
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand({ ping: 1 })"]
 
   redis:
     image: redis:7
@@ -35,7 +35,7 @@ services:
     image: rabbitmq:3-management
     mem_limit: 512m
     environment:
-      - RABBITMQ_VM_MEMORY_HIGH_WATERMARK=0.6
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit vm_memory_high_watermark 0.6
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
 
