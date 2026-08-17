@@ -2,7 +2,11 @@ services:
   postgres:
     image: postgres:16
     mem_limit: 384m
+    env_file:
+      - .env
     command: ["postgres", "-c", "shared_buffers=128MB"]
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
 
@@ -11,7 +15,7 @@ services:
     mem_limit: 384m
     command: ["mongod", "--wiredTigerCacheSizeGB", "0.25"]
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand(ping)"]
 
   redis:
     image: redis:7
@@ -34,3 +38,6 @@ services:
       - RABBITMQ_VM_MEMORY_HIGH_WATERMARK=0.6
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+
+volumes:
+  postgres_data:
