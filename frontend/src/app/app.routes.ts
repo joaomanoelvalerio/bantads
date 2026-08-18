@@ -11,6 +11,14 @@ export const routes: Routes = [
       import('./paginas/login/login.component').then((arquivo) => arquivo.LoginComponent),
   },
   {
+    path: 'autocadastro',
+    title: 'BANTADS · Abrir conta',
+    loadComponent: () =>
+      import('./paginas/autocadastro/autocadastro.component').then(
+        (arquivo) => arquivo.AutocadastroComponent,
+      ),
+  },
+  {
     path: '',
     canActivate: [autenticacaoGuard],
     loadComponent: () =>
