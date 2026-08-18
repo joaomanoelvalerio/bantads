@@ -1,0 +1,170 @@
+@use '@angular/material' as mat;
+@use './estilos/theme-colors' as paleta;
+@use './estilos/tokens' as t;
+
+html {
+  color-scheme: light;
+
+  @include mat.theme(
+    (
+      color: (
+        primary: paleta.$primary-palette,
+        tertiary: paleta.$tertiary-palette,
+      ),
+      typography: (
+        plain-family: t.$fonte-texto,
+        brand-family: t.$fonte-titulo,
+        bold-weight: 600,
+        medium-weight: 500,
+        regular-weight: 400,
+      ),
+      density: 0,
+    )
+  );
+
+  @include mat.theme-overrides(
+    (
+      primary: t.$verde-acao,
+      on-primary: #ffffff,
+      primary-container: t.$verde-claro,
+      on-primary-container: t.$verde-profundo,
+      secondary: t.$verde-profundo,
+      on-secondary: #ffffff,
+      surface: t.$superficie,
+      surface-container: t.$superficie,
+      surface-container-low: t.$superficie,
+      surface-container-high: t.$fundo,
+      surface-container-highest: t.$verde-claro,
+      on-surface: t.$texto,
+      on-surface-variant: t.$texto-fraco,
+      outline: t.$borda-forte,
+      outline-variant: t.$borda,
+      background: t.$fundo,
+      on-background: t.$texto,
+      error: t.$erro,
+    )
+  );
+}
+
+:root {
+  --bantads-verde-profundo: #{t.$verde-profundo};
+  --bantads-verde-acao: #{t.$verde-acao};
+  --bantads-verde-claro: #{t.$verde-claro};
+  --bantads-fundo: #{t.$fundo};
+  --bantads-superficie: #{t.$superficie};
+  --bantads-texto: #{t.$texto};
+  --bantads-texto-fraco: #{t.$texto-fraco};
+  --bantads-borda: #{t.$borda};
+  --bantads-erro: #{t.$erro};
+  --bantads-raio: #{t.$raio};
+  --bantads-sombra: #{t.$sombra};
+  --bantads-fonte-titulo: #{t.$fonte-titulo};
+  --bantads-fonte-texto: #{t.$fonte-texto};
+  --bantads-fonte-numero: #{t.$fonte-numero};
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bantads-fundo);
+  color: var(--bantads-texto);
+  font-family: var(--bantads-fonte-texto);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--bantads-fonte-titulo);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.numerico {
+  font-family: var(--bantads-fonte-numero);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--bantads-verde-acao);
+  outline-offset: 2px;
+}
+
+.mat-mdc-form-field-input-control.numerico {
+  font-family: var(--bantads-fonte-numero);
+}
+
+.mat-mdc-button-base {
+  --mat-button-filled-container-shape: var(--bantads-raio);
+  --mat-button-outlined-container-shape: var(--bantads-raio);
+  --mat-button-text-container-shape: var(--bantads-raio);
+  --mat-button-protected-container-shape: var(--bantads-raio);
+  --mat-button-tonal-container-shape: var(--bantads-raio);
+  letter-spacing: 0;
+  font-weight: 500;
+}
+
+.pagina-publica {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.pagina-publica__conteudo {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 48px 16px 56px;
+}
+
+.cartao {
+  width: 100%;
+  background: var(--bantads-superficie);
+  border: 1px solid var(--bantads-borda);
+  border-radius: var(--bantads-raio);
+  box-shadow: var(--bantads-sombra);
+  padding: 32px;
+}
+
+.cartao--login {
+  max-width: 420px;
+}
+
+.cartao--formulario {
+  max-width: 720px;
+}
+
+.cartao__titulo {
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+
+.cartao__apoio {
+  margin: 0 0 24px;
+  color: var(--bantads-texto-fraco);
+  font-size: 14px;
+}
+
+@media (max-width: 480px) {
+  .pagina-publica__conteudo {
+    padding: 24px 12px 40px;
+  }
+
+  .cartao {
+    padding: 24px 20px;
+  }
+}

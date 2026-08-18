@@ -1,0 +1,29 @@
+<header class="barra">
+  <div class="barra__conteudo">
+    <div class="marca">
+      <span class="marca__simbolo" aria-hidden="true">B</span>
+      <span class="marca__nome">BANTADS</span>
+    </div>
+
+    @if (sessao.estaAutenticado()) {
+      <div class="sessao">
+        @if (sessao.usuario(); as usuario) {
+          <div class="sessao__identificacao">
+            <span class="sessao__nome">{{ usuario.nome }}</span>
+            <span class="sessao__cpf numerico">{{ usuario.cpf | documento: 'cpf' }}</span>
+          </div>
+        }
+
+        <button
+          matButton="outlined"
+          type="button"
+          class="sessao__sair"
+          [disabled]="saindo()"
+          (click)="sair()"
+        >
+          {{ saindo() ? 'Saindo...' : 'Sair' }}
+        </button>
+      </div>
+    }
+  </div>
+</header>

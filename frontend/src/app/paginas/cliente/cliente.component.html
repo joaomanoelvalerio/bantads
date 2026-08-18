@@ -1,0 +1,10 @@
+<section class="painel">
+  <span class="painel__etiqueta">Área do cliente</span>
+  @if (sessao.usuario(); as usuario) {
+    <h1 class="painel__titulo">Olá, {{ usuario.nome }}</h1>
+    <p class="painel__dado">
+      CPF <span class="numerico">{{ usuario.cpf | documento: 'cpf' }}</span>
+    </p>
+    <p class="painel__dado">{{ usuario.email }}</p>
+  }
+</section>

@@ -1,0 +1,21 @@
+.aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  border: 1px solid rgba(179, 38, 30, 0.35);
+  border-left: 3px solid var(--bantads-erro);
+  border-radius: var(--bantads-raio);
+  background: rgba(179, 38, 30, 0.06);
+  color: #7f1d17;
+  font-size: 14px;
+}
+
+.aviso__icone {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: 1px;
+  fill: var(--bantads-erro);
+}

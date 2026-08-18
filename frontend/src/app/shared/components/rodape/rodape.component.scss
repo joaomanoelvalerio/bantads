@@ -1,0 +1,20 @@
+.rodape {
+  border-top: 1px solid var(--bantads-borda);
+  background: var(--bantads-superficie);
+}
+
+.rodape__conteudo {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 16px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--bantads-texto-fraco);
+}
+
+.rodape__aviso {
+  letter-spacing: 0.02em;
+}

@@ -1,0 +1,137 @@
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.secao {
+  border: 0;
+  border-top: 1px solid var(--bantads-borda);
+  margin: 0;
+  padding: 20px 0 4px;
+}
+
+.secao:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.secao__titulo {
+  font-family: var(--bantads-fonte-titulo);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bantads-texto-fraco);
+  padding: 0;
+  margin-bottom: 16px;
+}
+
+.grade {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 16px;
+}
+
+.grade__largo {
+  grid-column: 1 / -1;
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--bantads-borda);
+}
+
+.acoes__enviar {
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.acoes__enviar mat-progress-spinner {
+  --mdc-circular-progress-active-indicator-color: currentColor;
+}
+
+.confirmacao {
+  text-align: center;
+}
+
+.confirmacao__selo {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 20px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--bantads-verde-claro);
+}
+
+.confirmacao__selo svg {
+  width: 26px;
+  height: 26px;
+  fill: var(--bantads-verde-acao);
+}
+
+.confirmacao__texto {
+  margin: 8px auto 28px;
+  max-width: 520px;
+  color: var(--bantads-texto-fraco);
+  font-size: 15px;
+}
+
+.confirmacao__texto strong {
+  color: var(--bantads-texto);
+  font-weight: 500;
+}
+
+.resumo {
+  margin: 0 0 28px;
+  text-align: left;
+  border: 1px solid var(--bantads-borda);
+  border-radius: var(--bantads-raio);
+  overflow: hidden;
+}
+
+.resumo__item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-top: 1px solid var(--bantads-borda);
+}
+
+.resumo__item:first-child {
+  border-top: 0;
+}
+
+.resumo dt {
+  color: var(--bantads-texto-fraco);
+  font-size: 13px;
+}
+
+.resumo dd {
+  margin: 0;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .grade {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .acoes {
+    flex-direction: column-reverse;
+  }
+
+  .acoes > * {
+    width: 100%;
+  }
+}

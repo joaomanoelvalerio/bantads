@@ -1,0 +1,44 @@
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.formulario__acao {
+  margin-top: 12px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.formulario__acao mat-progress-spinner {
+  --mdc-circular-progress-active-indicator-color: currentColor;
+}
+
+.icone {
+  width: 20px;
+  height: 20px;
+  fill: var(--bantads-texto-fraco);
+}
+
+.alternativa {
+  margin: 24px 0 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--bantads-borda);
+  font-size: 14px;
+  color: var(--bantads-texto-fraco);
+  text-align: center;
+}
+
+.alternativa a {
+  color: var(--bantads-verde-acao);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.alternativa a:hover,
+.alternativa a:focus-visible {
+  text-decoration: underline;
+}

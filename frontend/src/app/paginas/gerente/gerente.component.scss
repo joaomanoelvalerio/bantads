@@ -1,0 +1,32 @@
+.painel {
+  display: block;
+  max-width: 560px;
+  background: var(--bantads-superficie);
+  border: 1px solid var(--bantads-borda);
+  border-radius: var(--bantads-raio);
+  box-shadow: var(--bantads-sombra);
+  padding: 28px 32px;
+}
+
+.painel__etiqueta {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bantads-verde-acao);
+  background: var(--bantads-verde-claro);
+  border-radius: 999px;
+  padding: 4px 12px;
+}
+
+.painel__titulo {
+  font-size: 24px;
+  margin: 16px 0 12px;
+}
+
+.painel__dado {
+  margin: 0 0 4px;
+  color: var(--bantads-texto-fraco);
+  font-size: 14px;
+}

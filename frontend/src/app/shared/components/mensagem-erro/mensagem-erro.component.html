@@ -1,0 +1,10 @@
+@if (mensagem(); as texto) {
+  <p class="aviso" role="alert">
+    <svg class="aviso__icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path
+        d="M12 2 1 21h22L12 2Zm0 6 .01 7H12V8Zm0 9.25a1.05 1.05 0 1 1 0 2.1 1.05 1.05 0 0 1 0-2.1Z"
+      />
+    </svg>
+    <span>{{ texto }}</span>
+  </p>
+}

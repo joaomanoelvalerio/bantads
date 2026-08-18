@@ -1,0 +1,223 @@
+<div class="pagina-publica">
+  <app-cabecalho />
+
+  <main class="pagina-publica__conteudo">
+    <section class="cartao cartao--formulario">
+      @if (resumo(); as solicitacao) {
+        <div class="confirmacao">
+          <span class="confirmacao__selo" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M9.6 16.6 4.9 12l-1.4 1.4 6.1 6.1L21.5 7.6 20.1 6.2 9.6 16.6Z" />
+            </svg>
+          </span>
+
+          <h1 class="cartao__titulo">Solicitação enviada</h1>
+          <p class="confirmacao__texto">
+            Sua solicitação de abertura de conta foi registrada e ficará
+            <strong>aguardando a análise de um gerente</strong>. Assim que for aprovada, sua senha de
+            acesso será enviada para o e-mail informado.
+          </p>
+
+          <dl class="resumo">
+            <div class="resumo__item">
+              <dt>Nome</dt>
+              <dd>{{ solicitacao.nome }}</dd>
+            </div>
+            <div class="resumo__item">
+              <dt>E-mail</dt>
+              <dd>{{ solicitacao.email }}</dd>
+            </div>
+            <div class="resumo__item">
+              <dt>Salário informado</dt>
+              <dd class="numerico">{{ solicitacao.salario | moeda }}</dd>
+            </div>
+            <div class="resumo__item">
+              <dt>Enviada em</dt>
+              <dd class="numerico">{{ solicitacao.enviadaEm }}</dd>
+            </div>
+          </dl>
+
+          <a matButton="filled" routerLink="/login" class="confirmacao__acao">Voltar ao login</a>
+        </div>
+      } @else {
+        <h1 class="cartao__titulo">Abrir conta</h1>
+        <p class="cartao__apoio">
+          Preencha seus dados para solicitar a abertura da conta. A aprovação é feita por um gerente.
+        </p>
+
+        <app-mensagem-erro [mensagem]="erro()" />
+
+        <form class="formulario" [formGroup]="formulario" (ngSubmit)="enviar()" novalidate>
+          <fieldset class="secao">
+            <legend class="secao__titulo">Dados pessoais</legend>
+
+            <div class="grade">
+              <mat-form-field appearance="outline" class="grade__largo">
+                <mat-label>Nome completo</mat-label>
+                <input matInput type="text" formControlName="nome" autocomplete="name" />
+                @if (formulario.controls.nome.hasError('required')) {
+                  <mat-error>Informe seu nome completo.</mat-error>
+                } @else if (formulario.controls.nome.hasError('minlength')) {
+                  <mat-error>O nome deve ter ao menos 3 caracteres.</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="grade__largo">
+                <mat-label>E-mail</mat-label>
+                <input matInput type="email" formControlName="email" autocomplete="email" />
+                @if (erroDoServidor(formulario.controls.email); as mensagem) {
+                  <mat-error>{{ mensagem }}</mat-error>
+                } @else if (formulario.controls.email.hasError('required')) {
+                  <mat-error>Informe seu e-mail.</mat-error>
+                } @else if (formulario.controls.email.hasError('email')) {
+                  <mat-error>Informe um e-mail em formato válido.</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>CPF</mat-label>
+                <input
+                  matInput
+                  class="numerico"
+                  type="text"
+                  inputmode="numeric"
+                  formControlName="cpf"
+                  placeholder="000.000.000-00"
+                  (input)="mascararCpf()"
+                />
+                @if (erroDoServidor(formulario.controls.cpf); as mensagem) {
+                  <mat-error>{{ mensagem }}</mat-error>
+                } @else if (formulario.controls.cpf.hasError('required')) {
+                  <mat-error>Informe seu CPF.</mat-error>
+                } @else if (formulario.controls.cpf.hasError('cpf')) {
+                  <mat-error>CPF inválido. Confira os dígitos digitados.</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Telefone</mat-label>
+                <input
+                  matInput
+                  class="numerico"
+                  type="tel"
+                  inputmode="numeric"
+                  formControlName="telefone"
+                  placeholder="(00) 00000-0000"
+                  (input)="mascararTelefone()"
+                />
+                @if (formulario.controls.telefone.hasError('required')) {
+                  <mat-error>Informe seu telefone.</mat-error>
+                } @else if (formulario.controls.telefone.hasError('pattern')) {
+                  <mat-error>Informe DDD e número completos.</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Salário mensal (R$)</mat-label>
+                <input
+                  matInput
+                  class="numerico"
+                  type="text"
+                  inputmode="numeric"
+                  formControlName="salario"
+                  placeholder="0,00"
+                  (input)="mascararSalario()"
+                />
+                @if (formulario.controls.salario.hasError('required')) {
+                  <mat-error>Informe seu salário.</mat-error>
+                } @else if (formulario.controls.salario.hasError('salarioFormato')) {
+                  <mat-error>Informe um valor válido, como 3.500,00.</mat-error>
+                } @else if (formulario.controls.salario.hasError('salarioPositivo')) {
+                  <mat-error>O salário deve ser maior que zero.</mat-error>
+                }
+              </mat-form-field>
+            </div>
+          </fieldset>
+
+          <fieldset class="secao">
+            <legend class="secao__titulo">Endereço</legend>
+
+            <div class="grade">
+              <mat-form-field appearance="outline">
+                <mat-label>CEP</mat-label>
+                <input
+                  matInput
+                  class="numerico"
+                  type="text"
+                  inputmode="numeric"
+                  formControlName="cep"
+                  placeholder="00000-000"
+                  autocomplete="postal-code"
+                  (input)="mascararCep()"
+                />
+                @if (formulario.controls.cep.hasError('required')) {
+                  <mat-error>Informe o CEP.</mat-error>
+                } @else if (formulario.controls.cep.hasError('pattern')) {
+                  <mat-error>O CEP deve ter 8 dígitos.</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Número</mat-label>
+                <input matInput type="text" formControlName="numero" />
+                @if (formulario.controls.numero.hasError('required')) {
+                  <mat-error>Informe o número.</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="grade__largo">
+                <mat-label>Logradouro</mat-label>
+                <input
+                  matInput
+                  type="text"
+                  formControlName="logradouro"
+                  autocomplete="street-address"
+                />
+                @if (formulario.controls.logradouro.hasError('required')) {
+                  <mat-error>Informe o logradouro.</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="grade__largo">
+                <mat-label>Complemento (opcional)</mat-label>
+                <input matInput type="text" formControlName="complemento" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Cidade</mat-label>
+                <input matInput type="text" formControlName="cidade" />
+                @if (formulario.controls.cidade.hasError('required')) {
+                  <mat-error>Informe a cidade.</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>UF</mat-label>
+                <mat-select formControlName="uf">
+                  @for (unidade of unidadesFederativas; track unidade) {
+                    <mat-option [value]="unidade">{{ unidade }}</mat-option>
+                  }
+                </mat-select>
+                @if (formulario.controls.uf.hasError('required')) {
+                  <mat-error>Selecione a UF.</mat-error>
+                }
+              </mat-form-field>
+            </div>
+          </fieldset>
+
+          <div class="acoes">
+            <a matButton="outlined" routerLink="/login">Já tenho conta</a>
+            <button matButton="filled" type="submit" class="acoes__enviar" [disabled]="enviando()">
+              @if (enviando()) {
+                <mat-progress-spinner mode="indeterminate" [diameter]="18" />
+              }
+              <span>{{ enviando() ? 'Enviando...' : 'Enviar solicitação' }}</span>
+            </button>
+          </div>
+        </form>
+      }
+    </section>
+  </main>
+
+  <app-rodape />
+</div>
