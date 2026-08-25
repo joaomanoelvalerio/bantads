@@ -1,18 +1,21 @@
 import { Routes } from '@angular/router';
 import { autenticacaoGuard } from './core/guards/autenticacao.guard';
 import { perfilGuard } from './core/guards/perfil.guard';
+import { visitanteGuard } from './core/guards/visitante.guard';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'login' },
   {
     path: 'login',
     title: 'BANTADS · Entrar',
+    canActivate: [visitanteGuard],
     loadComponent: () =>
       import('./paginas/login/login.component').then((arquivo) => arquivo.LoginComponent),
   },
   {
     path: 'autocadastro',
     title: 'BANTADS · Abrir conta',
+    canActivate: [visitanteGuard],
     loadComponent: () =>
       import('./paginas/autocadastro/autocadastro.component').then(
         (arquivo) => arquivo.AutocadastroComponent,
