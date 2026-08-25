@@ -1,9 +1,9 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { ErroApi } from '../models/erro-api.model';
-import { SessaoService } from '../services/sessao.service';
+import { EncerramentoSessaoService } from '../services/encerramento-sessao.service';
+import { ehRotaPublica } from './rotas-publicas';
 
 const CAMPOS_DE_MENSAGEM = ['message', 'mensagem', 'error', 'erro'];
 const MENSAGEM_INDISPONIVEL =
@@ -11,16 +11,14 @@ const MENSAGEM_INDISPONIVEL =
 const MENSAGEM_GENERICA = 'Não foi possível concluir a operação. Tente novamente.';
 
 export const erroInterceptor: HttpInterceptorFn = (requisicao, proximo) => {
-  const sessao = inject(SessaoService);
-  const router = inject(Router);
+  const encerramento = inject(EncerramentoSessaoService);
 
   return proximo(requisicao).pipe(
     catchError((resposta: HttpErrorResponse) => {
-      const sessaoExpirada = resposta.status === 401 && !requisicao.url.endsWith('/login');
-
-      if (sessaoExpirada) {
-        sessao.limpar();
-        router.navigate(['/login']);
+      // 401 em rota pública é credencial recusada e pertence à própria tela.
+      // Em rota protegida significa que o Gateway não reconhece mais a sessão.
+      if (resposta.status === 401 && !ehRotaPublica(requisicao)) {
+        encerramento.porExpiracao();
       }
 
       return throwError(() => new ErroApi(resposta.status, extrairMensagem(resposta)));

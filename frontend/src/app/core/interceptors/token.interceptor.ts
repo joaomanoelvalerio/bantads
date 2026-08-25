@@ -1,11 +1,12 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { SessaoService } from '../services/sessao.service';
+import { ehRotaPublica } from './rotas-publicas';
 
 export const tokenInterceptor: HttpInterceptorFn = (requisicao, proximo) => {
   const token = inject(SessaoService).token();
 
-  if (token === null) {
+  if (token === null || ehRotaPublica(requisicao)) {
     return proximo(requisicao);
   }
 

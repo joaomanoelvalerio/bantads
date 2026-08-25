@@ -6,6 +6,7 @@
       <h1 class="cartao__titulo">Acessar sua conta</h1>
       <p class="cartao__apoio">Informe suas credenciais para entrar no Internet Banking.</p>
 
+      <app-mensagem-aviso [mensagem]="aviso()" />
       <app-mensagem-erro [mensagem]="erro()" />
 
       <form class="formulario" [formGroup]="formulario" (ngSubmit)="entrar()" novalidate>
