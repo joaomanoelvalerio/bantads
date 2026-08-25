@@ -6,6 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
 import { ErroApi } from '../../core/models/erro-api.model';
+import { rotaInicial } from '../../core/navegacao/rota-inicial';
 import { AutenticacaoService } from '../../core/services/autenticacao.service';
 import { SessaoService } from '../../core/services/sessao.service';
 import { CabecalhoComponent } from '../../shared/components/cabecalho/cabecalho.component';
@@ -56,7 +57,7 @@ export class LoginComponent {
     this.erro.set(null);
 
     this.autenticacao.entrar(this.formulario.getRawValue()).subscribe({
-      next: () => this.router.navigateByUrl(this.sessao.rotaInicial()),
+      next: () => this.router.navigateByUrl(rotaInicial(this.sessao.perfil())),
       error: (falha: ErroApi) => {
         this.erro.set(falha.message);
         this.enviando.set(false);

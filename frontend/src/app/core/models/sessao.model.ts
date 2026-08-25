@@ -6,20 +6,27 @@ export interface Sessao {
   usuario: Usuario;
 }
 
+const PERFIS: readonly PerfilUsuario[] = ['CLIENTE', 'GERENTE'];
+
 export function ehSessao(valor: unknown): valor is Sessao {
   if (valor === null || typeof valor !== 'object') {
     return false;
   }
+
   const candidata = valor as Record<string, unknown>;
-  const usuario = candidata['usuario'] as Record<string, unknown> | undefined;
-  const perfis: PerfilUsuario[] = ['CLIENTE', 'GERENTE'];
+  const usuario = candidata['usuario'];
 
   return (
-    typeof candidata['token'] === 'string' &&
-    perfis.includes(candidata['tipo'] as PerfilUsuario) &&
-    usuario !== undefined &&
-    typeof usuario['cpf'] === 'string' &&
-    typeof usuario['nome'] === 'string' &&
-    typeof usuario['email'] === 'string'
+    ehTextoPreenchido(candidata['token']) &&
+    PERFIS.includes(candidata['tipo'] as PerfilUsuario) &&
+    usuario !== null &&
+    typeof usuario === 'object' &&
+    ehTextoPreenchido((usuario as Record<string, unknown>)['cpf']) &&
+    ehTextoPreenchido((usuario as Record<string, unknown>)['nome']) &&
+    ehTextoPreenchido((usuario as Record<string, unknown>)['email'])
   );
+}
+
+function ehTextoPreenchido(valor: unknown): valor is string {
+  return typeof valor === 'string' && valor.trim().length > 0;
 }
