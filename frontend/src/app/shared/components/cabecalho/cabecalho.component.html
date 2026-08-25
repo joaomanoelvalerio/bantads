@@ -5,14 +5,12 @@
       <span class="marca__nome">BANTADS</span>
     </div>
 
-    @if (sessao.estaAutenticado()) {
+    @if (sessao.usuario(); as usuario) {
       <div class="sessao">
-        @if (sessao.usuario(); as usuario) {
-          <div class="sessao__identificacao">
-            <span class="sessao__nome">{{ usuario.nome }}</span>
-            <span class="sessao__cpf numerico">{{ usuario.cpf | documento: 'cpf' }}</span>
-          </div>
-        }
+        <div class="sessao__identificacao">
+          <span class="sessao__nome">{{ usuario.nome }}</span>
+          <span class="sessao__perfil">{{ rotuloDoPerfil() }}</span>
+        </div>
 
         <button
           matButton="outlined"

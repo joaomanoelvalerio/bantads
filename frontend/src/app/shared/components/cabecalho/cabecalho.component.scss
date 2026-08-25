@@ -62,9 +62,11 @@
   white-space: nowrap;
 }
 
-.sessao__cpf {
+.sessao__perfil {
   font-size: 12px;
   color: var(--bantads-verde-claro);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .sessao__sair {
