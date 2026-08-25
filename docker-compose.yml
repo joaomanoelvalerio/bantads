@@ -1,4 +1,12 @@
 services:
+  gateway:
+    build: ./backend/api-gateway
+    mem_limit: 256m
+    environment:
+      - NODE_OPTIONS=--max-old-space-size=192
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health"]
+
   postgres:
     image: postgres:16
     mem_limit: 384m
