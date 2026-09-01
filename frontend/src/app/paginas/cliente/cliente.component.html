@@ -1,10 +1,61 @@
-<section class="painel">
-  <span class="painel__etiqueta">Área do cliente</span>
-  @if (sessao.usuario(); as usuario) {
-    <h1 class="painel__titulo">Olá, {{ usuario.nome }}</h1>
-    <p class="painel__dado">
-      CPF <span class="numerico">{{ usuario.cpf | documento: 'cpf' }}</span>
+<section class="conta">
+  @if (usuario(); as usuario) {
+    <p class="conta__saudacao">
+      Olá, <strong>{{ usuario.nome }}</strong>
     </p>
-    <p class="painel__dado">{{ usuario.email }}</p>
   }
+
+  @if (conta(); as conta) {
+    <div class="conta__destaques">
+      <div class="destaque">
+        <span class="destaque__rotulo">Conta</span>
+        <span class="destaque__valor numerico">{{ conta.numero }}</span>
+      </div>
+
+      <div class="destaque destaque--saldo">
+        <span class="destaque__rotulo">Saldo atual</span>
+        <span
+          class="destaque__valor numerico"
+          [class.destaque__valor--negativo]="saldoNegativo()"
+          aria-live="polite"
+        >
+          {{ conta.saldo | moeda }}
+        </span>
+      </div>
+    </div>
+  } @else if (consultando()) {
+    <p class="conta__carregando" role="status">
+      <mat-progress-spinner mode="indeterminate" [diameter]="18" />
+      <span>Consultando sua conta...</span>
+    </p>
+  }
+
+  <app-mensagem-erro [mensagem]="erro()" />
+
+  <div class="conta__acoes">
+    <button matButton="outlined" type="button" [disabled]="consultando()" (click)="consultar()">
+      {{ rotuloDaAtualizacao() }}
+    </button>
+    @if (conta() !== null) {
+      <span class="conta__nota">
+        O saldo pode levar alguns instantes para refletir operações recentes.
+      </span>
+    }
+  </div>
 </section>
+
+<nav class="menu" aria-label="Operações da conta">
+  @for (item of itens; track item.rota) {
+    <a
+      class="menu__item"
+      [routerLink]="item.rota"
+      routerLinkActive="menu__item--ativo"
+      #ativo="routerLinkActive"
+      [attr.aria-current]="ativo.isActive ? 'page' : null"
+    >
+      {{ item.rotulo }}
+    </a>
+  }
+</nav>
+
+<router-outlet />
