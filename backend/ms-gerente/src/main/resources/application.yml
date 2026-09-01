@@ -1,0 +1,23 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: ms-gerente
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:postgres}?currentSchema=ms_gerente
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+  jpa:
+    open-in-view: false
+    show-sql: false
+    hibernate:
+      # DDL e schema sao gerenciados pelos scripts em db/ (ver docs/design/modelagem-ct.md),
+      # nunca pelo Hibernate. `validate` apenas confirma na subida que as entidades
+      # batem com as tabelas reais.
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: ms_gerente
+        jdbc:
+          time_zone: America/Sao_Paulo

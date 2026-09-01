@@ -15,8 +15,70 @@ services:
     command: ["postgres", "-c", "shared_buffers=128MB"]
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # Scripts de init rodam uma única vez, em ordem, na primeira subida do
+      # volume — um schema por microsservico (schema-per-service).
+      - ./backend/ms-cliente/db/01-schema.sql:/docker-entrypoint-initdb.d/10-ms-cliente-schema.sql
+      - ./backend/ms-cliente/db/02-seed.sql:/docker-entrypoint-initdb.d/11-ms-cliente-seed.sql
+      - ./backend/ms-conta/db/01-schema.sql:/docker-entrypoint-initdb.d/20-ms-conta-schema.sql
+      - ./backend/ms-conta/db/02-seed.sql:/docker-entrypoint-initdb.d/21-ms-conta-seed.sql
+      - ./backend/ms-gerente/db/01-schema.sql:/docker-entrypoint-initdb.d/30-ms-gerente-schema.sql
+      - ./backend/ms-gerente/db/02-seed.sql:/docker-entrypoint-initdb.d/31-ms-gerente-seed.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
+
+  ms-cliente:
+    build: ./backend/ms-cliente
+    mem_limit: 512m
+    mem_reservation: 384m
+    environment:
+      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=60 -XX:+UseSerialGC
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${POSTGRES_DB}
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9090/health"]
+      start_period: 40s
+
+  ms-gerente:
+    build: ./backend/ms-gerente
+    mem_limit: 512m
+    mem_reservation: 384m
+    environment:
+      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=60 -XX:+UseSerialGC
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${POSTGRES_DB}
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health"]
+      start_period: 40s
+
+  ms-conta:
+    build: ./backend/ms-conta
+    mem_limit: 512m
+    mem_reservation: 384m
+    environment:
+      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=60 -XX:+UseSerialGC
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${POSTGRES_DB}
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/health"]
+      start_period: 40s
 
   mongo:
     image: mongo:7
