@@ -36,6 +36,48 @@ export const routes: Routes = [
         data: { perfil: 'CLIENTE' },
         loadComponent: () =>
           import('./paginas/cliente/cliente.component').then((arquivo) => arquivo.ClienteComponent),
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            loadComponent: () =>
+              import('./paginas/cliente/operacoes/inicio.component').then(
+                (arquivo) => arquivo.InicioClienteComponent,
+              ),
+          },
+          {
+            path: 'deposito',
+            title: 'BANTADS · Depósito',
+            loadComponent: () =>
+              import('./paginas/cliente/operacoes/deposito.component').then(
+                (arquivo) => arquivo.DepositoComponent,
+              ),
+          },
+          {
+            path: 'saque',
+            title: 'BANTADS · Saque',
+            loadComponent: () =>
+              import('./paginas/cliente/operacoes/saque.component').then(
+                (arquivo) => arquivo.SaqueComponent,
+              ),
+          },
+          {
+            path: 'transferencia',
+            title: 'BANTADS · Transferência',
+            loadComponent: () =>
+              import('./paginas/cliente/operacoes/transferencia.component').then(
+                (arquivo) => arquivo.TransferenciaComponent,
+              ),
+          },
+          {
+            path: 'extrato',
+            title: 'BANTADS · Extrato',
+            loadComponent: () =>
+              import('./paginas/cliente/operacoes/extrato.component').then(
+                (arquivo) => arquivo.ExtratoComponent,
+              ),
+          },
+        ],
       },
       {
         path: 'gerente',

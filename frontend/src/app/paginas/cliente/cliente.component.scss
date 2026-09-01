@@ -1,6 +1,4 @@
-.painel {
-  display: block;
-  max-width: 560px;
+.conta {
   background: var(--bantads-superficie);
   border: 1px solid var(--bantads-borda);
   border-radius: var(--bantads-raio);
@@ -8,25 +6,130 @@
   padding: 28px 32px;
 }
 
-.painel__etiqueta {
-  display: inline-block;
+.conta__saudacao {
+  margin: 0 0 20px;
+  font-family: var(--bantads-fonte-titulo);
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--bantads-texto);
+
+  strong {
+    font-weight: 600;
+  }
+}
+
+.conta__destaques {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 48px;
+  align-items: flex-end;
+}
+
+.destaque {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.destaque__rotulo {
   font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: var(--bantads-texto-fraco);
+}
+
+.destaque__valor {
+  font-size: 26px;
+  line-height: 1.2;
+  color: var(--bantads-verde-profundo);
+}
+
+.destaque--saldo .destaque__valor {
+  font-size: 34px;
   color: var(--bantads-verde-acao);
-  background: var(--bantads-verde-claro);
-  border-radius: 999px;
-  padding: 4px 12px;
 }
 
-.painel__titulo {
-  font-size: 24px;
-  margin: 16px 0 12px;
+.destaque--saldo .destaque__valor--negativo {
+  color: var(--bantads-erro);
 }
 
-.painel__dado {
-  margin: 0 0 4px;
+.conta__carregando {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
   color: var(--bantads-texto-fraco);
   font-size: 14px;
+}
+
+.conta__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-top: 24px;
+}
+
+.conta__nota {
+  color: var(--bantads-texto-fraco);
+  font-size: 13px;
+}
+
+.menu {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.menu__item {
+  display: block;
+  padding: 16px;
+  border: 1px solid var(--bantads-borda);
+  border-radius: var(--bantads-raio);
+  background: var(--bantads-superficie);
+  color: var(--bantads-texto);
+  font-weight: 500;
+  text-align: center;
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.menu__item:hover {
+  border-color: var(--bantads-verde-acao);
+}
+
+.menu__item--ativo {
+  background: var(--bantads-verde-claro);
+  border-color: var(--bantads-verde-acao);
+  color: var(--bantads-verde-profundo);
+  box-shadow: inset 0 -3px 0 var(--bantads-verde-acao);
+}
+
+@media (max-width: 720px) {
+  .menu {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .conta {
+    padding: 20px 16px;
+  }
+
+  .conta__destaques {
+    gap: 12px 24px;
+  }
+
+  .destaque--saldo .destaque__valor {
+    font-size: 28px;
+  }
+
+  .menu__item {
+    padding: 12px 8px;
+  }
 }
