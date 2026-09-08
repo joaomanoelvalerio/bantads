@@ -1,12 +1,9 @@
 import { Component } from '@angular/core';
+import { OperacaoValorComponent } from './operacao-valor.component';
 
 @Component({
   selector: 'app-deposito',
-  template: `<h2 class="titulo">Depósito</h2>`,
-  styles: `
-    .titulo {
-      font-size: 20px;
-    }
-  `,
+  imports: [OperacaoValorComponent],
+  template: `<app-operacao-valor operacao="deposito" />`,
 })
 export class DepositoComponent {}
