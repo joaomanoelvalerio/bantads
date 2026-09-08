@@ -31,9 +31,11 @@ export class ClienteComponent {
   protected readonly itens = MENU_CLIENTE;
   protected readonly usuario = this.sessao.usuario;
 
-  protected readonly conta = signal<Conta | null>(null);
-  protected readonly consultando = signal(false);
-  protected readonly erro = signal<string | null>(null);
+  // Públicos: as telas de operação sob /cliente leem a conta daqui e pedem a
+  // reconsulta do saldo após concluírem, em vez de consultar a conta de novo.
+  readonly conta = signal<Conta | null>(null);
+  readonly consultando = signal(false);
+  readonly erro = signal<string | null>(null);
 
   protected readonly saldoNegativo = computed(
     () => this.conta()?.saldo.trim().startsWith('-') ?? false,
@@ -51,7 +53,7 @@ export class ClienteComponent {
     this.consultar();
   }
 
-  protected consultar(): void {
+  consultar(): void {
     const cpf = this.usuario()?.cpf;
 
     if (cpf === undefined || this.consultando()) {
