@@ -1,0 +1,96 @@
+<section class="operacao">
+  <h2 class="operacao__titulo">{{ textos().titulo }}</h2>
+  <p class="operacao__apoio">{{ textos().apoio }}</p>
+
+  @if (conta(); as conta) {
+    <app-mensagem-aviso [mensagem]="sucesso()" />
+    <app-mensagem-erro [mensagem]="erro()" />
+
+    <dl class="dados">
+      <div class="dados__item">
+        <dt>Conta</dt>
+        <dd class="numerico">{{ conta.numero }}</dd>
+      </div>
+    </dl>
+
+    @if (valorRevisado(); as valor) {
+      <div class="revisao">
+        <h3 class="revisao__titulo">Confirmar operação</h3>
+
+        <dl class="dados dados--revisao">
+          <div class="dados__item">
+            <dt>Operação</dt>
+            <dd>{{ textos().titulo }}</dd>
+          </div>
+          <div class="dados__item">
+            <dt>Conta</dt>
+            <dd class="numerico">{{ conta.numero }}</dd>
+          </div>
+          <div class="dados__item">
+            <dt>Valor</dt>
+            <dd class="numerico dados__destaque">{{ valor | moeda }}</dd>
+          </div>
+        </dl>
+
+        <div class="acoes">
+          <button matButton="outlined" type="button" [disabled]="enviando()" (click)="corrigir()">
+            Corrigir
+          </button>
+          <button
+            matButton="filled"
+            type="button"
+            class="acoes__enviar"
+            [disabled]="enviando()"
+            (click)="confirmar()"
+          >
+            @if (enviando()) {
+              <mat-progress-spinner mode="indeterminate" [diameter]="18" />
+            }
+            <span>{{
+              enviando() ? 'Enviando...' : 'Confirmar ' + textos().acao.toLowerCase()
+            }}</span>
+          </button>
+        </div>
+      </div>
+    } @else {
+      <form class="formulario" [formGroup]="formulario" (ngSubmit)="revisar()" novalidate>
+        <mat-form-field appearance="outline" class="formulario__valor">
+          <mat-label>{{ textos().rotuloDoCampo }}</mat-label>
+          <input
+            matInput
+            class="numerico"
+            type="text"
+            inputmode="numeric"
+            formControlName="valor"
+            placeholder="0,00"
+            autocomplete="off"
+            (input)="mascarar()"
+          />
+          @if (erroDoServidor(); as mensagem) {
+            <mat-error>{{ mensagem }}</mat-error>
+          } @else if (formulario.controls.valor.hasError('required')) {
+            <mat-error>Informe o valor.</mat-error>
+          } @else if (formulario.controls.valor.hasError('valorFormato')) {
+            <mat-error>Informe um valor válido, como 1.250,00.</mat-error>
+          } @else if (formulario.controls.valor.hasError('valorPositivo')) {
+            <mat-error>O valor deve ser maior que zero.</mat-error>
+          }
+        </mat-form-field>
+
+        <div class="acoes">
+          <button matButton="filled" type="submit">{{ textos().acao }}</button>
+        </div>
+      </form>
+    }
+  } @else if (carregandoConta()) {
+    <p class="estado" role="status">
+      <mat-progress-spinner mode="indeterminate" [diameter]="18" />
+      <span>Carregando os dados da sua conta...</span>
+    </p>
+  } @else {
+    <app-mensagem-erro
+      [mensagem]="erroDaConta() ?? 'Não foi possível carregar os dados da sua conta.'"
+    />
+    <button matButton="outlined" type="button" (click)="recarregarConta()">Tentar novamente</button>
+  }
+</section>

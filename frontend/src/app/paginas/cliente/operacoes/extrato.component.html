@@ -1,0 +1,130 @@
+<section class="operacao operacao--extrato">
+  <h2 class="operacao__titulo">Extrato</h2>
+  <p class="operacao__apoio">
+    A linha do tempo mostra todos os dias do período, inclusive os sem movimentação, com o saldo
+    consolidado ao fim de cada dia.
+  </p>
+
+  @if (conta(); as conta) {
+    <dl class="dados">
+      <div class="dados__item">
+        <dt>Conta</dt>
+        <dd class="numerico">{{ conta.numero }}</dd>
+      </div>
+    </dl>
+
+    <form class="filtro" [formGroup]="formulario" (ngSubmit)="consultar()" novalidate>
+      <mat-form-field appearance="outline">
+        <mat-label>Data de início</mat-label>
+        <input matInput class="numerico" type="date" formControlName="dataInicio" />
+        @if (formulario.controls.dataInicio.hasError('required')) {
+          <mat-error>Informe a data de início.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Data de fim</mat-label>
+        <input matInput class="numerico" type="date" formControlName="dataFim" />
+        @if (formulario.controls.dataFim.hasError('required')) {
+          <mat-error>Informe a data de fim.</mat-error>
+        }
+      </mat-form-field>
+
+      <button
+        matButton="filled"
+        type="submit"
+        class="filtro__acao acoes__enviar"
+        [disabled]="consultando()"
+      >
+        @if (consultando()) {
+          <mat-progress-spinner mode="indeterminate" [diameter]="18" />
+        }
+        <span>{{ consultando() ? 'Consultando...' : 'Consultar' }}</span>
+      </button>
+    </form>
+
+    @if (erroDoPeriodo; as mensagem) {
+      <p class="filtro__erro" role="alert">{{ mensagem }}</p>
+    }
+
+    @if (consultando()) {
+      <p class="estado" role="status">
+        <mat-progress-spinner mode="indeterminate" [diameter]="18" />
+        <span>Montando a linha do tempo...</span>
+      </p>
+    } @else if (erro(); as mensagem) {
+      <app-mensagem-erro [mensagem]="mensagem" />
+      <button matButton="outlined" type="button" (click)="consultar()">Tentar novamente</button>
+    } @else if (dias().length > 0) {
+      @if (periodoConsultado(); as periodo) {
+        <p class="linha-do-tempo__periodo">Período de {{ periodo }}</p>
+      }
+
+      <ol class="linha-do-tempo">
+        @for (dia of dias(); track dia.chave) {
+          <li class="dia">
+            <h3 class="dia__titulo">{{ dia.rotulo }}</h3>
+
+            @if (dia.lancamentos.length === 0) {
+              <p class="dia__vazio">Sem movimentações neste dia.</p>
+            } @else {
+              <ul class="dia__lancamentos">
+                @for (lancamento of dia.lancamentos; track $index) {
+                  <li
+                    class="lancamento"
+                    [class.lancamento--entrada]="lancamento.sentido === 'ENTRADA'"
+                    [class.lancamento--saida]="lancamento.sentido === 'SAIDA'"
+                  >
+                    <div class="lancamento__cabecalho">
+                      <span class="lancamento__rotulo">
+                        {{ lancamento.sentido === 'ENTRADA' ? 'Entrada' : 'Saída' }}
+                      </span>
+                      <span class="lancamento__operacao">{{ lancamento.operacao }}</span>
+                      <span class="lancamento__horario numerico">{{ lancamento.horario }}</span>
+                    </div>
+
+                    @if (lancamento.origem !== null || lancamento.destino !== null) {
+                      <p class="lancamento__partes">
+                        @if (lancamento.origem !== null) {
+                          <span>De {{ lancamento.origem }}</span>
+                        }
+                        @if (lancamento.destino !== null) {
+                          <span>Para {{ lancamento.destino }}</span>
+                        }
+                      </p>
+                    }
+
+                    <p class="lancamento__valores">
+                      <span class="lancamento__valor numerico">
+                        {{ lancamento.sentido === 'ENTRADA' ? '+' : '−' }}
+                        {{ lancamento.valor | moeda }}
+                      </span>
+                      <span class="lancamento__saldo numerico">
+                        Saldo após: {{ lancamento.saldoApos | moeda }}
+                      </span>
+                    </p>
+                  </li>
+                }
+              </ul>
+            }
+
+            <p class="dia__consolidado">
+              <span>Saldo consolidado do dia</span>
+              <strong class="numerico">{{ dia.saldoConsolidado | moeda }}</strong>
+            </p>
+          </li>
+        }
+      </ol>
+    }
+  } @else if (carregandoConta()) {
+    <p class="estado" role="status">
+      <mat-progress-spinner mode="indeterminate" [diameter]="18" />
+      <span>Carregando os dados da sua conta...</span>
+    </p>
+  } @else {
+    <app-mensagem-erro
+      [mensagem]="erroDaConta() ?? 'Não foi possível carregar os dados da sua conta.'"
+    />
+    <button matButton="outlined" type="button" (click)="recarregarConta()">Tentar novamente</button>
+  }
+</section>

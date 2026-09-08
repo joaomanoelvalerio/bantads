@@ -1,0 +1,122 @@
+<section class="operacao">
+  <h2 class="operacao__titulo">Transferência</h2>
+  <p class="operacao__apoio">O valor sai da sua conta e é creditado na conta destino.</p>
+
+  @if (conta(); as conta) {
+    <app-mensagem-aviso [mensagem]="sucesso()" />
+    <app-mensagem-erro [mensagem]="erro()" />
+
+    <dl class="dados">
+      <div class="dados__item">
+        <dt>Conta de origem</dt>
+        <dd class="numerico">{{ conta.numero }}</dd>
+      </div>
+    </dl>
+
+    @if (revisada(); as transferencia) {
+      <div class="revisao">
+        <h3 class="revisao__titulo">Confirmar operação</h3>
+
+        <dl class="dados dados--revisao">
+          <div class="dados__item">
+            <dt>Operação</dt>
+            <dd>Transferência</dd>
+          </div>
+          <div class="dados__item">
+            <dt>Conta de origem</dt>
+            <dd class="numerico">{{ conta.numero }}</dd>
+          </div>
+          <div class="dados__item">
+            <dt>Conta destino</dt>
+            <dd class="numerico">{{ transferencia.contaDestino }}</dd>
+          </div>
+          <div class="dados__item">
+            <dt>Valor</dt>
+            <dd class="numerico dados__destaque">{{ transferencia.valor | moeda }}</dd>
+          </div>
+        </dl>
+
+        <div class="acoes">
+          <button matButton="outlined" type="button" [disabled]="enviando()" (click)="corrigir()">
+            Corrigir
+          </button>
+          <button
+            matButton="filled"
+            type="button"
+            class="acoes__enviar"
+            [disabled]="enviando()"
+            (click)="confirmar()"
+          >
+            @if (enviando()) {
+              <mat-progress-spinner mode="indeterminate" [diameter]="18" />
+            }
+            <span>{{ enviando() ? 'Enviando...' : 'Confirmar transferência' }}</span>
+          </button>
+        </div>
+      </div>
+    } @else {
+      <form class="formulario" [formGroup]="formulario" (ngSubmit)="revisar()" novalidate>
+        <div class="grade">
+          <mat-form-field appearance="outline">
+            <mat-label>Conta destino</mat-label>
+            <input
+              matInput
+              class="numerico"
+              type="text"
+              inputmode="numeric"
+              formControlName="contaDestino"
+              placeholder="0000"
+              autocomplete="off"
+              (input)="mascararContaDestino()"
+            />
+            <mat-hint>Quatro dígitos, incluindo zeros à esquerda.</mat-hint>
+            @if (erroDoServidor('contaDestino'); as mensagem) {
+              <mat-error>{{ mensagem }}</mat-error>
+            } @else if (formulario.controls.contaDestino.hasError('required')) {
+              <mat-error>Informe a conta destino.</mat-error>
+            } @else if (formulario.controls.contaDestino.hasError('pattern')) {
+              <mat-error>A conta destino tem quatro dígitos.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Valor da transferência (R$)</mat-label>
+            <input
+              matInput
+              class="numerico"
+              type="text"
+              inputmode="numeric"
+              formControlName="valor"
+              placeholder="0,00"
+              autocomplete="off"
+              (input)="mascararValor()"
+            />
+            @if (erroDoServidor('valor'); as mensagem) {
+              <mat-error>{{ mensagem }}</mat-error>
+            } @else if (formulario.controls.valor.hasError('required')) {
+              <mat-error>Informe o valor.</mat-error>
+            } @else if (formulario.controls.valor.hasError('valorFormato')) {
+              <mat-error>Informe um valor válido, como 1.250,00.</mat-error>
+            } @else if (formulario.controls.valor.hasError('valorPositivo')) {
+              <mat-error>O valor deve ser maior que zero.</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <div class="acoes">
+          <button matButton="filled" type="submit">Transferir</button>
+        </div>
+      </form>
+    }
+  } @else if (carregandoConta()) {
+    <p class="estado" role="status">
+      <mat-progress-spinner mode="indeterminate" [diameter]="18" />
+      <span>Carregando os dados da sua conta...</span>
+    </p>
+  } @else {
+    <app-mensagem-erro
+      [mensagem]="erroDaConta() ?? 'Não foi possível carregar os dados da sua conta.'"
+    />
+    <button matButton="outlined" type="button" (click)="recarregarConta()">Tentar novamente</button>
+  }
+</section>
