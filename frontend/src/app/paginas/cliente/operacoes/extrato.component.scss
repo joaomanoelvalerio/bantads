@@ -1,0 +1,177 @@
+@use '../../../../estilos/operacoes';
+
+// Azul e vermelho aqui têm significado (entrada e saída), então são tons próprios,
+// fora da identidade verde e distintos do vermelho de erro do sistema. O sentido
+// também aparece por rótulo e sinal, nunca só por cor.
+:host {
+  --extrato-entrada: #0f4c92;
+  --extrato-entrada-fundo: #eef4fc;
+  --extrato-saida: #9d2235;
+  --extrato-saida-fundo: #fdeff1;
+}
+
+.operacao--extrato {
+  max-width: 780px;
+}
+
+.filtro {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 200px)) auto;
+  align-items: start;
+  gap: 0 16px;
+}
+
+.filtro__acao {
+  margin-top: 6px;
+}
+
+.filtro__erro {
+  margin: 0 0 20px;
+  color: var(--bantads-erro);
+  font-size: 14px;
+}
+
+.linha-do-tempo__periodo {
+  margin: 4px 0 16px;
+  color: var(--bantads-texto-fraco);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.linha-do-tempo {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dia {
+  border: 1px solid var(--bantads-borda);
+  border-radius: var(--bantads-raio);
+  overflow: hidden;
+}
+
+.dia__titulo {
+  margin: 0;
+  padding: 12px 16px;
+  background: var(--bantads-fundo);
+  border-bottom: 1px solid var(--bantads-borda);
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.dia__vazio {
+  margin: 0;
+  padding: 14px 16px;
+  color: var(--bantads-texto-fraco);
+  font-size: 14px;
+}
+
+.dia__lancamentos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lancamento {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--bantads-borda);
+  border-left: 4px solid transparent;
+}
+
+.lancamento--entrada {
+  background: var(--extrato-entrada-fundo);
+  border-left-color: var(--extrato-entrada);
+  color: var(--extrato-entrada);
+}
+
+.lancamento--saida {
+  background: var(--extrato-saida-fundo);
+  border-left-color: var(--extrato-saida);
+  color: var(--extrato-saida);
+}
+
+.lancamento__cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.lancamento__rotulo {
+  padding: 2px 8px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lancamento__operacao {
+  font-weight: 600;
+}
+
+.lancamento__horario {
+  margin-left: auto;
+  font-size: 13px;
+}
+
+.lancamento__partes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 8px 0 0;
+  font-size: 13px;
+}
+
+.lancamento__valores {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+  margin: 8px 0 0;
+}
+
+.lancamento__valor {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.lancamento__saldo {
+  font-size: 13px;
+}
+
+.dia__consolidado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+  margin: 0;
+  padding: 12px 16px;
+  background: var(--bantads-superficie);
+  color: var(--bantads-texto-fraco);
+  font-size: 13px;
+}
+
+.dia__consolidado strong {
+  font-size: 16px;
+  color: var(--bantads-verde-profundo);
+}
+
+@media (max-width: 600px) {
+  .filtro {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .filtro__acao {
+    width: 100%;
+    margin-bottom: 16px;
+  }
+}
