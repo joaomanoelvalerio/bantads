@@ -13,6 +13,7 @@ import { ClienteService } from '../../core/services/cliente.service';
 import { CabecalhoComponent } from '../../shared/components/cabecalho/cabecalho.component';
 import { MensagemErroComponent } from '../../shared/components/mensagem-erro/mensagem-erro.component';
 import { RodapeComponent } from '../../shared/components/rodape/rodape.component';
+import { apenasDigitos, mascaraValor } from '../../shared/formato/mascara-valor';
 import { MoedaPipe } from '../../shared/pipes/moeda.pipe';
 import { cpfValidator } from '../../shared/validators/cpf.validator';
 import { paraDecimal, salarioValidator } from '../../shared/validators/salario.validator';
@@ -83,7 +84,7 @@ export class AutocadastroComponent {
   }
 
   protected mascararSalario(): void {
-    this.reescrever('salario', mascaraSalario);
+    this.reescrever('salario', mascaraValor);
   }
 
   protected erroDoServidor(controle: AbstractControl): string | null {
@@ -180,10 +181,6 @@ export class AutocadastroComponent {
   }
 }
 
-function apenasDigitos(valor: string): string {
-  return valor.replace(/\D/g, '');
-}
-
 function mascaraCpf(digitos: string): string {
   const limitado = digitos.slice(0, 11);
   const partes = [limitado.slice(0, 3), limitado.slice(3, 6), limitado.slice(6, 9)].filter(
@@ -212,17 +209,4 @@ function mascaraCep(digitos: string): string {
   const limitado = digitos.slice(0, 8);
 
   return limitado.length > 5 ? `${limitado.slice(0, 5)}-${limitado.slice(5)}` : limitado;
-}
-
-function mascaraSalario(digitos: string): string {
-  const limitado = digitos.replace(/^0+/, '').slice(0, 11);
-
-  if (limitado.length === 0) {
-    return '';
-  }
-
-  const centavos = limitado.padStart(3, '0');
-  const inteiro = centavos.slice(0, -2).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-
-  return `${inteiro},${centavos.slice(-2)}`;
 }
