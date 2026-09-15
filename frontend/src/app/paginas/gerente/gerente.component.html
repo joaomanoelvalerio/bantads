@@ -1,10 +1,128 @@
-<section class="painel">
-  <span class="painel__etiqueta">Área do gerente</span>
-  @if (sessao.usuario(); as usuario) {
-    <h1 class="painel__titulo">Olá, {{ usuario.nome }}</h1>
-    <p class="painel__dado">
-      CPF <span class="numerico">{{ usuario.cpf | documento: 'cpf' }}</span>
+<section class="gerente">
+  <header class="gerente__cabecalho">
+    <div class="gerente__identificacao">
+      <span class="gerente__etiqueta">Área do gerente</span>
+      <h1 class="gerente__titulo">Solicitações de abertura de conta</h1>
+      @if (sessao.usuario(); as usuario) {
+        <p class="gerente__apoio">{{ usuario.nome }} · {{ usuario.email }}</p>
+      }
+    </div>
+
+    <button
+      matButton="outlined"
+      type="button"
+      class="gerente__recarregar acoes__enviar"
+      [disabled]="carregando()"
+      (click)="carregar()"
+    >
+      @if (carregando()) {
+        <mat-progress-spinner mode="indeterminate" [diameter]="18" />
+      }
+      <span>{{ carregando() ? 'Carregando...' : 'Recarregar tabela' }}</span>
+    </button>
+  </header>
+
+  <app-mensagem-erro [mensagem]="erroDaAcao()" />
+  <app-mensagem-aviso [mensagem]="aviso()" />
+
+  @if (sucesso(); as mensagem) {
+    <p class="sucesso" role="status">{{ mensagem }}</p>
+  }
+
+  <mat-button-toggle-group
+    class="filtro"
+    aria-label="Filtrar solicitações por status"
+    [value]="filtro()"
+  >
+    @for (opcao of filtros; track opcao.valor) {
+      <mat-button-toggle [value]="opcao.valor" (change)="aplicarFiltro(opcao.valor)">
+        {{ opcao.rotulo }}
+      </mat-button-toggle>
+    }
+  </mat-button-toggle-group>
+
+  @if (carregando() && lista().length === 0) {
+    <p class="estado" role="status">
+      <mat-progress-spinner mode="indeterminate" [diameter]="18" />
+      <span>Carregando as solicitações...</span>
     </p>
-    <p class="painel__dado">{{ usuario.email }}</p>
+  } @else if (erro(); as mensagem) {
+    <app-mensagem-erro [mensagem]="mensagem" />
+    <button matButton="outlined" type="button" (click)="carregar()">Tentar novamente</button>
+  } @else if (lista().length === 0) {
+    <div class="vazio">
+      <p class="vazio__texto">Não há solicitações de abertura de conta registradas no momento.</p>
+      <button matButton="outlined" type="button" (click)="carregar()">Recarregar tabela</button>
+    </div>
+  } @else if (linhas().length === 0) {
+    <p class="vazio__texto">Nenhuma solicitação com esse status.</p>
+  } @else {
+    <div class="tabela__rolagem">
+      <table class="tabela">
+        <caption class="tabela__legenda">
+          Solicitações de autocadastro em todos os estados. Apenas as pendentes podem ser decididas.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">CPF</th>
+            <th scope="col">Nome</th>
+            <th scope="col" class="celula--direita">Salário</th>
+            <th scope="col">Status</th>
+            <th scope="col">Motivo</th>
+            <th scope="col">Análise</th>
+            <th scope="col">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (linha of linhas(); track linha.solicitacao.cpf) {
+            <tr [class.linha--ocupada]="andamentoDe(linha.solicitacao.cpf) !== null">
+              <td class="numerico">{{ linha.solicitacao.cpf | documento: 'cpf' }}</td>
+              <td>{{ linha.solicitacao.nome }}</td>
+              <td class="numerico celula--direita">{{ linha.solicitacao.salario | moeda }}</td>
+              <td>
+                <span
+                  class="marca"
+                  [class.marca--pendente]="linha.solicitacao.status === 'PENDENTE'"
+                  [class.marca--aprovada]="linha.solicitacao.status === 'APROVADO'"
+                  [class.marca--recusada]="linha.solicitacao.status === 'NAO_APROVADO'"
+                >
+                  {{ linha.rotuloDoStatus }}
+                </span>
+              </td>
+              <td class="celula--motivo">{{ linha.solicitacao.motivo ?? '—' }}</td>
+              <td class="numerico">{{ linha.analisadaEm ?? '—' }}</td>
+              <td class="celula--acoes">
+                @if (andamentoDe(linha.solicitacao.cpf); as andamento) {
+                  <span class="processando" role="status">
+                    <mat-progress-spinner mode="indeterminate" [diameter]="16" />
+                    <span>
+                      {{ andamento === 'ACOMPANHANDO' ? 'Aprovando...' : 'Aguardando confirmação' }}
+                    </span>
+                  </span>
+                } @else if (linha.solicitacao.status === 'PENDENTE') {
+                  <div class="acoes-da-linha">
+                    <button matButton="filled" type="button" (click)="aprovar(linha.solicitacao)">
+                      Aprovar
+                    </button>
+                    <button
+                      matButton="outlined"
+                      type="button"
+                      disabled
+                      aria-describedby="nota-recusar"
+                    >
+                      Recusar
+                    </button>
+                  </div>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <p class="nota" id="nota-recusar">
+      A recusa de solicitações (R10) entra em uma entrega futura; o botão está desabilitado.
+    </p>
   }
 </section>
