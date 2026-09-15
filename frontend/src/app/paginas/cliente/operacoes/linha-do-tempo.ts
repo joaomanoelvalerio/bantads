@@ -1,13 +1,7 @@
 import Decimal from 'decimal.js';
 import { DateTime } from 'luxon';
 import { Extrato, Movimentacao, TipoMovimentacao } from '../../../core/models/movimentacao.model';
-
-/**
- * Todo o agrupamento por dia é feito neste fuso, nunca no do navegador: uma
- * movimentação no fim da noite cairia no dia seguinte e o saldo consolidado do dia
- * sairia errado.
- */
-export const FUSO_BANTADS = 'America/Sao_Paulo';
+import { FUSO_BANTADS } from '../../../shared/formato/data-hora';
 
 /** Intervalo máximo aceito entre a data de início e a data de fim do extrato. */
 export const DIAS_MAXIMOS_DO_PERIODO = 365;
