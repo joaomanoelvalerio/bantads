@@ -39,6 +39,14 @@ CREATE UNIQUE INDEX uq_solicitacoes_cpf_ativa
     ON ms_cliente.solicitacoes (cpf)
     WHERE status IN ('Pendente', 'Aprovado');
 
+-- R1: e-mail é o login (único no MS Auth); aqui é uma validação de melhor
+-- esforço no momento do autocadastro — a garantia final é do MS Auth na
+-- aprovação (R9), que pode rejeitar por colisão com um e-mail de outro
+-- domínio (ex.: já usado por um gerente). Mesmo critério de "ativa" do CPF.
+CREATE UNIQUE INDEX uq_solicitacoes_email_ativa
+    ON ms_cliente.solicitacoes (email)
+    WHERE status IN ('Pendente', 'Aprovado');
+
 CREATE INDEX idx_solicitacoes_email ON ms_cliente.solicitacoes (email);
 CREATE INDEX idx_solicitacoes_status ON ms_cliente.solicitacoes (status);
 

@@ -21,3 +21,18 @@ spring:
         default_schema: ms_conta
         jdbc:
           time_zone: America/Sao_Paulo
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    listener:
+      simple:
+        # RabbitMQ entrega at-least-once; consumidor idempotente (ver
+        # ProjecaoContaListener). 3 tentativas / 5s, depois vai para a DLQ
+        # (docs/specs/05-nao-funcionais/07-rabbitmq-filas.md).
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 5000

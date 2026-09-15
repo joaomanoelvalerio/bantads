@@ -17,4 +17,10 @@ public class ContaService {
         return contaRepository.findById(numeroConta)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conta não encontrada"));
     }
+
+    /** R3 — tela inicial do cliente: resolve a conta a partir do CPF da sessão (cada cliente tem só uma). */
+    public Conta buscarPorCpfCliente(String cpfCliente) {
+        return contaRepository.findByCpfCliente(cpfCliente)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conta não encontrada"));
+    }
 }

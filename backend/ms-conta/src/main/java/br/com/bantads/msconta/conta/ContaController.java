@@ -24,4 +24,10 @@ public class ContaController {
     public Conta buscarPorNumero(@PathVariable String numeroConta) {
         return contaService.buscarPorNumero(numeroConta);
     }
+
+    /** R3: o front não sabe o próprio número de conta de antemão — resolve pelo CPF da sessão. */
+    @GetMapping("/cliente/{cpf}")
+    public Conta buscarPorCpfCliente(@PathVariable String cpf) {
+        return contaService.buscarPorCpfCliente(cpf);
+    }
 }
