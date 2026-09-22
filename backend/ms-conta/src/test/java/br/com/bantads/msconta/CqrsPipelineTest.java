@@ -8,12 +8,14 @@ import br.com.bantads.msconta.conta.ContaRepository;
 import br.com.bantads.msconta.conta.MovimentacaoRepository;
 import br.com.bantads.msconta.evento.EventoConta;
 import br.com.bantads.msconta.evento.EventoContaMensagem;
+import br.com.bantads.msconta.evento.EventoContaRepository;
 import br.com.bantads.msconta.evento.EventoContaService;
 import br.com.bantads.msconta.evento.TipoEvento;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.Map;
 import java.util.function.Supplier;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +37,9 @@ class CqrsPipelineTest {
     private EventoContaService eventoContaService;
 
     @Autowired
+    private EventoContaRepository eventoContaRepository;
+
+    @Autowired
     private ContaRepository contaRepository;
 
     @Autowired
@@ -42,6 +47,15 @@ class CqrsPipelineTest {
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
+
+    // Limpa a conta de teste antes de rodar, para o teste ser repetível contra
+    // o mesmo Postgres persistente (docker-compose), não só numa base limpa.
+    @BeforeEach
+    void limparContaDeTeste() {
+        movimentacaoRepository.deleteByNumeroConta(CONTA_TESTE);
+        eventoContaRepository.deleteByObjetoId(CONTA_TESTE);
+        contaRepository.deleteById(CONTA_TESTE);
+    }
 
     @Test
     void appendPublicaEProjetaDeFormaIdempotente() {
