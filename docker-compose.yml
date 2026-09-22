@@ -26,6 +26,35 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
 
+  orquestrador:
+    build: ./backend/orquestrador
+    mem_limit: 512m
+    mem_reservation: 384m
+    environment:
+      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=60 -XX:+UseSerialGC
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  ms-email:
+    build: ./backend/ms-email
+    mem_limit: 512m
+    mem_reservation: 384m
+    environment:
+      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=60 -XX:+UseSerialGC
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
   ms-cliente:
     build: ./backend/ms-cliente
     mem_limit: 512m
@@ -37,6 +66,7 @@ services:
       - DB_NAME=${POSTGRES_DB}
       - DB_USER=${POSTGRES_USER}
       - DB_PASSWORD=${POSTGRES_PASSWORD}
+
     depends_on:
       postgres:
         condition: service_healthy
@@ -77,6 +107,7 @@ services:
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=${RABBITMQ_USER}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+
     depends_on:
       postgres:
         condition: service_healthy
