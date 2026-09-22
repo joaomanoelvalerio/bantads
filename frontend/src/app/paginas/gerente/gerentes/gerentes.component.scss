@@ -1,0 +1,10 @@
+@use '../../../../estilos/gerencia';
+
+.tabela {
+  min-width: 860px;
+}
+
+.acoes-da-linha {
+  display: flex;
+  gap: 8px;
+}
