@@ -85,7 +85,59 @@ export const routes: Routes = [
         canActivate: [perfilGuard],
         data: { perfil: 'GERENTE' },
         loadComponent: () =>
-          import('./paginas/gerente/gerente.component').then((arquivo) => arquivo.GerenteComponent),
+          import('./paginas/gerente/area-gerente.component').then(
+            (arquivo) => arquivo.AreaGerenteComponent,
+          ),
+        children: [
+          {
+            path: '',
+            pathMatch: 'full',
+            loadComponent: () =>
+              import('./paginas/gerente/gerente.component').then(
+                (arquivo) => arquivo.GerenteComponent,
+              ),
+          },
+          {
+            path: 'clientes',
+            title: 'BANTADS · Clientes',
+            loadComponent: () =>
+              import('./paginas/gerente/clientes/clientes.component').then(
+                (arquivo) => arquivo.ClientesComponent,
+              ),
+          },
+          {
+            path: 'relatorio-clientes',
+            title: 'BANTADS · Relatório de clientes',
+            loadComponent: () =>
+              import('./paginas/gerente/relatorio-clientes/relatorio-clientes.component').then(
+                (arquivo) => arquivo.RelatorioClientesComponent,
+              ),
+          },
+          {
+            path: 'gerentes',
+            title: 'BANTADS · Gerentes',
+            loadComponent: () =>
+              import('./paginas/gerente/gerentes/gerentes.component').then(
+                (arquivo) => arquivo.GerentesComponent,
+              ),
+          },
+          {
+            path: 'gerentes/novo',
+            title: 'BANTADS · Inserir gerente',
+            loadComponent: () =>
+              import('./paginas/gerente/gerentes/inserir-gerente.component').then(
+                (arquivo) => arquivo.InserirGerenteComponent,
+              ),
+          },
+          {
+            path: 'gerentes/:cpf/editar',
+            title: 'BANTADS · Alterar gerente',
+            loadComponent: () =>
+              import('./paginas/gerente/gerentes/editar-gerente.component').then(
+                (arquivo) => arquivo.EditarGerenteComponent,
+              ),
+          },
+        ],
       },
     ],
   },

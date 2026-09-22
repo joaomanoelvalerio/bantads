@@ -1,0 +1,16 @@
+<nav class="menu" aria-label="Funcionalidades do gerente">
+  @for (item of itens; track item.rota) {
+    <a
+      class="menu__item"
+      [routerLink]="item.rota"
+      routerLinkActive="menu__item--ativo"
+      [routerLinkActiveOptions]="{ exact: item.exata }"
+      #ativo="routerLinkActive"
+      [attr.aria-current]="ativo.isActive ? 'page' : null"
+    >
+      {{ item.rotulo }}
+    </a>
+  }
+</nav>
+
+<router-outlet />
