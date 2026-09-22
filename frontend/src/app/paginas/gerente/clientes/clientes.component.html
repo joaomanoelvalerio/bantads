@@ -1,0 +1,97 @@
+<section>
+  <header class="pagina__cabecalho">
+    <div>
+      <h1 class="pagina__titulo">Clientes</h1>
+      <p class="pagina__apoio">Todos os clientes do banco, em ordem alfabética.</p>
+    </div>
+
+    <div class="pagina__acoes">
+      <button
+        matButton="outlined"
+        type="button"
+        class="acoes__enviar"
+        [disabled]="carregando()"
+        (click)="carregar()"
+      >
+        @if (carregando()) {
+          <mat-progress-spinner mode="indeterminate" [diameter]="18" />
+        }
+        <span>{{ carregando() ? 'Carregando...' : 'Recarregar' }}</span>
+      </button>
+    </div>
+  </header>
+
+  @if (carregando() && lista().length === 0) {
+    <p class="estado" role="status">
+      <mat-progress-spinner mode="indeterminate" [diameter]="18" />
+      <span>Carregando os clientes...</span>
+    </p>
+  } @else if (erro(); as mensagem) {
+    <app-mensagem-erro [mensagem]="mensagem" />
+    <button matButton="outlined" type="button" (click)="carregar()">Tentar novamente</button>
+  } @else if (lista().length === 0) {
+    <div class="vazio">
+      <p class="vazio__texto">Não há clientes cadastrados no banco.</p>
+      <button matButton="outlined" type="button" (click)="carregar()">Recarregar</button>
+    </div>
+  } @else {
+    <mat-form-field appearance="outline" class="busca">
+      <mat-label>Buscar por CPF ou nome</mat-label>
+      <input
+        matInput
+        type="search"
+        autocomplete="off"
+        [value]="termo()"
+        (input)="pesquisar($event)"
+      />
+      @if (termo().length > 0) {
+        <button matSuffix matButton="text" type="button" (click)="limparBusca()">Limpar</button>
+      }
+    </mat-form-field>
+
+    @if (linhas().length === 0) {
+      <div class="vazio" role="status">
+        <p class="vazio__texto">Nenhum cliente encontrado para “{{ termo().trim() }}”.</p>
+        <button matButton="outlined" type="button" (click)="limparBusca()">Limpar busca</button>
+      </div>
+    } @else {
+      <div class="tabela__rolagem">
+        <table class="tabela">
+          <caption class="tabela__legenda">
+            @if (termo().trim().length > 0) {
+              {{ linhas().length }} de {{ lista().length }} clientes correspondem à busca.
+            } @else {
+              {{ lista().length }} clientes.
+            }
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">CPF</th>
+              <th scope="col">Nome</th>
+              <th scope="col">Cidade</th>
+              <th scope="col">Estado</th>
+              <th scope="col" class="celula--direita">Saldo</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (cliente of linhas(); track cliente.cpf) {
+              <tr>
+                <td class="numerico">{{ cliente.cpf | documento: 'cpf' }}</td>
+                <td>{{ cliente.nome }}</td>
+                <td>{{ cliente.cidade }}</td>
+                <td>{{ cliente.estado }}</td>
+                <td class="numerico celula--direita">
+                  @if (cliente.saldo; as saldo) {
+                    {{ saldo | moeda }}
+                  } @else {
+                    <span class="ausente">Sem conta</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+</section>
