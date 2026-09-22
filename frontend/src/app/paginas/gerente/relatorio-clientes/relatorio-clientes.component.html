@@ -1,0 +1,116 @@
+<section>
+  <header class="pagina__cabecalho">
+    <div>
+      <h1 class="pagina__titulo">Relatório de clientes</h1>
+      <p class="pagina__apoio">
+        Clientes com dados de conta e gerente responsável, em ordem alfabética.
+      </p>
+    </div>
+
+    <div class="pagina__acoes">
+      <button
+        matButton="outlined"
+        type="button"
+        class="acoes__enviar"
+        [disabled]="situacao() === 'GERANDO'"
+        (click)="gerar()"
+      >
+        @if (situacao() === 'GERANDO') {
+          <mat-progress-spinner mode="indeterminate" [diameter]="18" />
+        }
+        <span>{{ situacao() === 'GERANDO' ? 'Gerando...' : 'Gerar novamente' }}</span>
+      </button>
+    </div>
+  </header>
+
+  @switch (situacao()) {
+    @case ('GERANDO') {
+      <p class="estado" role="status">
+        <mat-progress-spinner mode="indeterminate" [diameter]="18" />
+        <span>Gerando o relatório. Isso pode levar alguns instantes...</span>
+      </p>
+    }
+
+    @case ('FALHA') {
+      <app-mensagem-erro [mensagem]="mensagemDeFalha()" />
+      <button matButton="outlined" type="button" (click)="gerar()">Gerar novamente</button>
+    }
+
+    @case ('TEMPO_ESGOTADO') {
+      <app-mensagem-aviso
+        mensagem="O relatório está demorando mais que o esperado e a tela parou de aguardar. Gere novamente em instantes."
+      />
+      <button matButton="outlined" type="button" (click)="gerar()">Gerar novamente</button>
+    }
+
+    @case ('PRONTO') {
+      @if (linhas().length === 0) {
+        <div class="vazio">
+          <p class="vazio__texto">O relatório não tem clientes para exibir.</p>
+          <button matButton="outlined" type="button" (click)="gerar()">Gerar novamente</button>
+        </div>
+      } @else {
+        <div class="tabela__rolagem">
+          <table class="tabela">
+            <caption class="tabela__legenda">
+              {{
+                linhas().length
+              }}
+              clientes no relatório.
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">CPF do cliente</th>
+                <th scope="col">Nome do cliente</th>
+                <th scope="col">E-mail</th>
+                <th scope="col" class="celula--direita">Salário</th>
+                <th scope="col">Conta</th>
+                <th scope="col" class="celula--direita">Saldo</th>
+                <th scope="col">CPF do gerente</th>
+                <th scope="col">Nome do gerente</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (linha of linhas(); track linha.cpf) {
+                <tr>
+                  <td class="numerico">{{ linha.cpf | documento: 'cpf' }}</td>
+                  <td>{{ linha.nome }}</td>
+                  <td>{{ linha.email }}</td>
+                  <td class="numerico celula--direita">{{ linha.salario | moeda }}</td>
+                  <td class="numerico">
+                    @if (linha.numeroConta; as numero) {
+                      {{ numero }}
+                    } @else {
+                      <span class="ausente">Sem conta</span>
+                    }
+                  </td>
+                  <td class="numerico celula--direita">
+                    @if (linha.saldo; as saldo) {
+                      {{ saldo | moeda }}
+                    } @else {
+                      <span class="ausente">—</span>
+                    }
+                  </td>
+                  <td class="numerico">
+                    @if (linha.cpfGerente; as cpfGerente) {
+                      {{ cpfGerente | documento: 'cpf' }}
+                    } @else {
+                      <span class="ausente">—</span>
+                    }
+                  </td>
+                  <td>
+                    @if (linha.nomeGerente; as nomeGerente) {
+                      {{ nomeGerente }}
+                    } @else {
+                      <span class="ausente">—</span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+  }
+</section>
