@@ -1,0 +1,89 @@
+<section>
+  <header class="pagina__cabecalho">
+    <div>
+      <h1 class="pagina__titulo">Gerentes</h1>
+      <p class="pagina__apoio">Gerentes ativos do banco, em ordem alfabética.</p>
+    </div>
+
+    <div class="pagina__acoes">
+      <button
+        matButton="outlined"
+        type="button"
+        class="acoes__enviar"
+        [disabled]="carregando()"
+        (click)="carregar()"
+      >
+        @if (carregando()) {
+          <mat-progress-spinner mode="indeterminate" [diameter]="18" />
+        }
+        <span>{{ carregando() ? 'Carregando...' : 'Recarregar' }}</span>
+      </button>
+      <a matButton="filled" class="acoes__enviar" routerLink="novo">Inserir gerente</a>
+    </div>
+  </header>
+
+  @if (confirmacao(); as mensagem) {
+    <p class="sucesso" role="status">{{ mensagem }}</p>
+  }
+
+  @if (carregando() && lista().length === 0) {
+    <p class="estado" role="status">
+      <mat-progress-spinner mode="indeterminate" [diameter]="18" />
+      <span>Carregando os gerentes...</span>
+    </p>
+  } @else if (erro(); as mensagem) {
+    <app-mensagem-erro [mensagem]="mensagem" />
+    <button matButton="outlined" type="button" (click)="carregar()">Tentar novamente</button>
+  } @else if (lista().length === 0) {
+    <div class="vazio">
+      <p class="vazio__texto">Não há gerentes ativos cadastrados.</p>
+      <button matButton="outlined" type="button" (click)="carregar()">Recarregar</button>
+    </div>
+  } @else {
+    <div class="tabela__rolagem">
+      <table class="tabela">
+        <caption class="tabela__legenda">
+          Gerentes ativos e a quantidade de clientes de cada um.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Nome</th>
+            <th scope="col">CPF</th>
+            <th scope="col">E-mail</th>
+            <th scope="col">Telefone</th>
+            <th scope="col" class="celula--direita">Clientes</th>
+            <th scope="col">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (gerente of lista(); track gerente.cpf) {
+            <tr>
+              <td>{{ gerente.nome }}</td>
+              <td class="numerico">{{ gerente.cpf | documento: 'cpf' }}</td>
+              <td>{{ gerente.email }}</td>
+              <td class="numerico">{{ gerente.telefone | documento: 'telefone' }}</td>
+              <td class="numerico celula--direita">{{ gerente.quantidadeClientes }}</td>
+              <td class="celula--acoes">
+                <div class="acoes-da-linha">
+                  <a matButton="outlined" [routerLink]="[gerente.cpf, 'editar']">Editar</a>
+                  <button
+                    matButton="outlined"
+                    type="button"
+                    disabled
+                    aria-describedby="nota-remover"
+                  >
+                    Remover
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <p class="nota" id="nota-remover">
+      A remoção de gerentes (R15) entra em uma entrega futura; o botão está desabilitado.
+    </p>
+  }
+</section>

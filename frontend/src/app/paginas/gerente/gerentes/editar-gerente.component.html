@@ -1,0 +1,84 @@
+<section>
+  <header class="pagina__cabecalho">
+    <div>
+      <h1 class="pagina__titulo">Alterar gerente</h1>
+      <p class="pagina__apoio">Nome e telefone podem ser alterados. CPF e e-mail são fixos.</p>
+    </div>
+  </header>
+
+  @if (carregando()) {
+    <p class="estado" role="status">
+      <mat-progress-spinner mode="indeterminate" [diameter]="18" />
+      <span>Carregando os dados do gerente...</span>
+    </p>
+  } @else if (naoEncontrado()) {
+    <div class="vazio">
+      <p class="vazio__texto">
+        Gerente não encontrado. Ele pode ter sido removido ou o endereço está incorreto.
+      </p>
+      <a matButton="outlined" [routerLink]="rotaDaListagem">Voltar à listagem</a>
+    </div>
+  } @else if (erroDeCarga(); as mensagem) {
+    <app-mensagem-erro [mensagem]="mensagem" />
+    <div class="pagina__acoes">
+      <button matButton="outlined" type="button" (click)="carregar()">Tentar novamente</button>
+      <a matButton="text" [routerLink]="rotaDaListagem">Voltar à listagem</a>
+    </div>
+  } @else if (gerente(); as gerente) {
+    <div class="cartao">
+      <dl class="dados">
+        <div class="dados__item">
+          <dt>CPF</dt>
+          <dd class="numerico">{{ gerente.cpf | documento: 'cpf' }}</dd>
+        </div>
+        <div class="dados__item">
+          <dt>E-mail</dt>
+          <dd>{{ gerente.email }}</dd>
+        </div>
+      </dl>
+
+      <app-mensagem-erro [mensagem]="erro()" />
+
+      <form class="formulario" [formGroup]="formulario" (ngSubmit)="salvar()" novalidate>
+        <div class="grade">
+          <mat-form-field appearance="outline" class="grade__largo">
+            <mat-label>Nome completo</mat-label>
+            <input matInput type="text" formControlName="nome" autocomplete="off" />
+            @if (formulario.controls.nome.hasError('required')) {
+              <mat-error>Informe o nome do gerente.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Telefone</mat-label>
+            <input
+              matInput
+              class="numerico"
+              type="tel"
+              inputmode="numeric"
+              formControlName="telefone"
+              placeholder="(00) 00000-0000"
+              autocomplete="off"
+              (input)="mascararTelefone()"
+            />
+            @if (formulario.controls.telefone.hasError('required')) {
+              <mat-error>Informe o telefone.</mat-error>
+            } @else if (formulario.controls.telefone.hasError('pattern')) {
+              <mat-error>Informe DDD e número completos.</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <div class="acoes">
+          <a matButton="outlined" [routerLink]="rotaDaListagem">Cancelar</a>
+          <button matButton="filled" type="submit" class="acoes__enviar" [disabled]="salvando()">
+            @if (salvando()) {
+              <mat-progress-spinner mode="indeterminate" [diameter]="18" />
+            }
+            <span>{{ salvando() ? 'Salvando...' : 'Salvar alterações' }}</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+</section>

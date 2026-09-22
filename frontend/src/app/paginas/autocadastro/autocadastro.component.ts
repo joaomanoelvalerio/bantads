@@ -13,6 +13,7 @@ import { ClienteService } from '../../core/services/cliente.service';
 import { CabecalhoComponent } from '../../shared/components/cabecalho/cabecalho.component';
 import { MensagemErroComponent } from '../../shared/components/mensagem-erro/mensagem-erro.component';
 import { RodapeComponent } from '../../shared/components/rodape/rodape.component';
+import { mascaraCpf, mascaraTelefone } from '../../shared/formato/mascara-documento';
 import { apenasDigitos, mascaraValor } from '../../shared/formato/mascara-valor';
 import { MoedaPipe } from '../../shared/pipes/moeda.pipe';
 import { cpfValidator } from '../../shared/validators/cpf.validator';
@@ -179,30 +180,6 @@ export class AutocadastroComponent {
     const controle = this.formulario.controls[campo];
     controle.setValue(formatador(apenasDigitos(controle.value)));
   }
-}
-
-function mascaraCpf(digitos: string): string {
-  const limitado = digitos.slice(0, 11);
-  const partes = [limitado.slice(0, 3), limitado.slice(3, 6), limitado.slice(6, 9)].filter(
-    (parte) => parte.length > 0,
-  );
-  const verificador = limitado.slice(9);
-
-  return partes.join('.') + (verificador.length > 0 ? `-${verificador}` : '');
-}
-
-function mascaraTelefone(digitos: string): string {
-  const limitado = digitos.slice(0, 11);
-
-  if (limitado.length <= 2) {
-    return limitado;
-  }
-
-  const corte = limitado.length > 10 ? 7 : 6;
-  const prefixo = `(${limitado.slice(0, 2)}) ${limitado.slice(2, corte)}`;
-  const sufixo = limitado.slice(corte);
-
-  return sufixo.length > 0 ? `${prefixo}-${sufixo}` : prefixo;
 }
 
 function mascaraCep(digitos: string): string {
