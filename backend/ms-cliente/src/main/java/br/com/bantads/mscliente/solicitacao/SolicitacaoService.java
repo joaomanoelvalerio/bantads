@@ -1,6 +1,8 @@
 package br.com.bantads.mscliente.solicitacao;
 
 import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,50 @@ public class SolicitacaoService {
 
     public SolicitacaoService(SolicitacaoRepository solicitacaoRepository) {
         this.solicitacaoRepository = solicitacaoRepository;
+    }
+
+    /** R8 — todas as solicitações, em qualquer status. */
+    public List<Solicitacao> listarTodas() {
+        return solicitacaoRepository.findAllByOrderByCriadoEmDesc();
+    }
+
+    /** SAGA Aprovar Cliente (R9, passo 1) — devolve os dados pro Orquestrador compor os próximos passos. */
+    public Optional<Solicitacao> aprovarPendente(String cpf) {
+        Optional<Solicitacao> pendente = solicitacaoRepository.findFirstByCpfAndStatus(cpf, StatusSolicitacao.PENDENTE);
+        pendente.ifPresent(solicitacao -> {
+            solicitacao.setStatus(StatusSolicitacao.APROVADO);
+            solicitacao.setDecididoEm(OffsetDateTime.now());
+            solicitacaoRepository.save(solicitacao);
+        });
+        return pendente;
+    }
+
+    /**
+     * Compensação do passo 1 — caso geral: devolve a Pendente. Idempotente:
+     * se não há uma linha Aprovada pra esse CPF (já revertida, ou nunca
+     * chegou a ser aprovada), não faz nada.
+     */
+    public void reverterParaPendente(String cpf) {
+        solicitacaoRepository.findFirstByCpfAndStatus(cpf, StatusSolicitacao.APROVADO).ifPresent(solicitacao -> {
+            solicitacao.setStatus(StatusSolicitacao.PENDENTE);
+            solicitacao.setDecididoEm(null);
+            solicitacaoRepository.save(solicitacao);
+        });
+    }
+
+    /**
+     * Compensação do passo 1 — caso especial (login duplicado no MS Auth,
+     * passo 5): NÃO devolve a Pendente, pois a mesma tentativa falharia de
+     * novo indefinidamente (docs/specs/05-nao-funcionais/09-sagas-api-compositions.md).
+     * Idempotente como a reversão normal.
+     */
+    public void marcarNaoAprovada(String cpf, String motivo) {
+        solicitacaoRepository.findFirstByCpfAndStatus(cpf, StatusSolicitacao.APROVADO).ifPresent(solicitacao -> {
+            solicitacao.setStatus(StatusSolicitacao.NAO_APROVADO);
+            solicitacao.setMotivo(motivo);
+            solicitacao.setDecididoEm(OffsetDateTime.now());
+            solicitacaoRepository.save(solicitacao);
+        });
     }
 
     /**

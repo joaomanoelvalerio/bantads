@@ -27,9 +27,17 @@
 		<url/>
 	</scm>
 	<properties>
-		<java.version>26</java.version>
+		<java.version>21</java.version>
 	</properties>
 	<dependencies>
+		<dependency>
+			<!-- Todo MS precisa expor GET /health (docs/specs/05-nao-funcionais/11-health-reboot.md).
+			     Também traz jackson-databind transitivamente, que o
+			     Jackson2JsonMessageConverter (RabbitMQConfig) precisa em tempo de
+			     execução e que nenhuma outra dependência daqui trazia. -->
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-amqp</artifactId>
@@ -37,11 +45,12 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-mail</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-amqp</artifactId>
-    </dependency>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-amqp-test</artifactId>
@@ -55,6 +64,7 @@
 	</dependencies>
 
 	<build>
+		<finalName>ms-email</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

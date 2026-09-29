@@ -1,5 +1,7 @@
 package br.com.bantads.msconta.conta;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -23,8 +25,12 @@ import lombok.Setter;
 @NoArgsConstructor
 public class Conta {
 
+    // Coluna/campo interno seguem "numeroConta" (nome já usado em toda a
+    // camada de persistência/serviço); só a serialização JSON precisa bater
+    // com o contrato SwaggerHub, que chama esse campo de "numero".
     @Id
     @Column(name = "numero_conta")
+    @JsonProperty("numero")
     private String numeroConta;
 
     @Column(name = "cpf_cliente")
@@ -38,6 +44,9 @@ public class Conta {
     @Column(name = "cpf_gerente")
     private String cpfGerente;
 
+    // Guarda interna da projeção idempotente (ProjecaoContaListener) — não faz
+    // parte do contrato público do recurso Conta, não deve vazar na resposta.
     @Column(name = "ultima_versao_aplicada")
+    @JsonIgnore
     private Integer ultimaVersaoAplicada;
 }

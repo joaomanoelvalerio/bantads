@@ -3,7 +3,7 @@ import { Extrato } from '../../../core/models/movimentacao.model';
 import { diaDeIso, montarLinhaDoTempo, sentidoDe } from './linha-do-tempo';
 
 const extrato: Extrato = {
-  saldoAnterior: '800.0000',
+  saldoAbertura: '800.0000',
   movimentacoes: [
     {
       dataHora: '2020-01-20T12:00:00',
@@ -48,7 +48,7 @@ describe('linha do tempo do extrato', () => {
 
   it('agrupa pelo fuso de Sao Paulo, nao pelo do navegador', () => {
     const noturno: Extrato = {
-      saldoAnterior: '0.0000',
+      saldoAbertura: '0.0000',
       movimentacoes: [{ dataHora: '2020-01-11T02:30:00Z', tipo: 'DEPOSITO', valor: '50.0000' }],
     };
     const dias = montarLinhaDoTempo(

@@ -2,6 +2,7 @@ package br.com.bantads.msconta.conta;
 
 import jakarta.validation.Valid;
 import java.time.LocalDate;
+import java.util.List;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,6 +32,18 @@ public class ContaController {
         this.contaService = contaService;
         this.operacaoContaService = operacaoContaService;
         this.extratoService = extratoService;
+    }
+
+    /**
+     * Uso interno — o Gateway compõe R11/R12/R16 com isto (saldo por
+     * cliente, contagem por gerente). Não é pra ficar acessível direto por
+     * um cliente comum (devolve saldo de todo mundo); o Gateway bloqueia o
+     * path raiz de `/contas` no proxy genérico e só chama isto
+     * servidor-a-servidor — ver `backend/api-gateway/index.js`.
+     */
+    @GetMapping
+    public List<Conta> listarTodas() {
+        return contaService.listarTodas();
     }
 
     @GetMapping("/{numeroConta}")

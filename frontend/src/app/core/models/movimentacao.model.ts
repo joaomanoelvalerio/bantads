@@ -23,7 +23,7 @@ export interface Movimentacao {
  * anterior à data inicial; a linha do tempo diária é montada pelo front.
  */
 export interface Extrato {
-  saldoAnterior: string;
+  saldoAbertura: string;
   movimentacoes: readonly Movimentacao[];
   _links?: Record<string, LinkHateoas>;
 }

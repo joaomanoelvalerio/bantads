@@ -36,6 +36,12 @@ public class EmailService {
                 enviarEmailFalha(destinatario, motivo);
                 break;
 
+            case "email.notificar-troca-gerente":
+                String nomeCliente = (String) payload.getOrDefault("nome", "Cliente");
+                String nomeGerenteNovo = (String) payload.getOrDefault("nomeGerenteNovo", "um novo gerente");
+                enviarEmailTrocaGerente(destinatario, nomeCliente, nomeGerenteNovo);
+                break;
+
             default:
                 log.warn("Tipo de comando de e-mail desconhecido: {}", tipo);
                 break;
@@ -56,6 +62,22 @@ public class EmailService {
             log.info("E-mail com senha enviado com sucesso para: {}", para);
         } catch (Exception e) {
             log.error("Erro ao enviar e-mail de senha para {}", para, e);
+        }
+    }
+
+    private void enviarEmailTrocaGerente(String para, String nomeCliente, String nomeGerenteNovo) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom("noreply@bantads.com.br");
+            message.setTo(para);
+            message.setSubject("BANTADS - Sua conta tem um novo gerente");
+            message.setText("Olá " + nomeCliente + ",\n\nSua conta no BANTADS passou a ser atendida por " +
+                           nomeGerenteNovo + ".\n\nAtenciosamente,\nEquipe BANTADS.");
+
+            mailSender.send(message);
+            log.info("E-mail de troca de gerente enviado com sucesso para: {}", para);
+        } catch (Exception e) {
+            log.error("Erro ao enviar e-mail de troca de gerente para {}", para, e);
         }
     }
 

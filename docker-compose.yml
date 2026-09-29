@@ -2,14 +2,44 @@ services:
   gateway:
     build: ./backend/api-gateway
     mem_limit: 256m
+    ports:
+      # Único serviço exposto ao host — é o ponto único de acesso
+      # (docs/specs/04-arquitetura.md); o front (`environment.apiUrl`,
+      # rodando via `ng serve` fora do Docker) espera localhost:3000.
+      - "3000:3000"
+    env_file:
+      - .env
     environment:
       - NODE_OPTIONS=--max-old-space-size=192
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+    depends_on:
+      ms-cliente:
+        condition: service_healthy
+      ms-gerente:
+        condition: service_healthy
+      ms-conta:
+        condition: service_healthy
+      ms-auth:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health"]
 
   postgres:
     image: postgres:16
     mem_limit: 384m
+    ports:
+      # Exposto para acesso via DBeaver/psql do host — exigido aberto na
+      # defesa (docs/specs/08-normas-defesa-final.md).
+      - "5432:5432"
     env_file:
       - .env
     command: ["postgres", "-c", "shared_buffers=128MB"]
@@ -36,24 +66,35 @@ services:
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=${RABBITMQ_USER}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     depends_on:
       rabbitmq:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health"]
+      start_period: 40s
 
   ms-email:
     build: ./backend/ms-email
     mem_limit: 512m
     mem_reservation: 384m
+    env_file:
+      - .env
     environment:
       - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=60 -XX:+UseSerialGC
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - RABBITMQ_USER=${RABBITMQ_USER}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
-
     depends_on:
       rabbitmq:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health"]
+      start_period: 40s
 
   ms-cliente:
     build: ./backend/ms-cliente
@@ -66,9 +107,15 @@ services:
       - DB_NAME=${POSTGRES_DB}
       - DB_USER=${POSTGRES_USER}
       - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
 
     depends_on:
       postgres:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9090/health"]
@@ -85,8 +132,14 @@ services:
       - DB_NAME=${POSTGRES_DB}
       - DB_USER=${POSTGRES_USER}
       - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
     depends_on:
       postgres:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/health"]
@@ -117,12 +170,54 @@ services:
       test: ["CMD-SHELL", "curl -f http://localhost:8081/health"]
       start_period: 40s
 
+  ms-auth:
+    build: ./backend/ms-auth
+    mem_limit: 512m
+    mem_reservation: 384m
+    environment:
+      - JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=60 -XX:+UseSerialGC
+      - MONGO_HOST=mongo
+      - MONGO_PORT=27017
+      - MONGO_USER=${MONGO_USER}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_DB=ms_auth
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8082/health"]
+      start_period: 40s
+
   mongo:
     image: mongo:7
     mem_limit: 384m
+    env_file:
+      - .env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
     command: ["mongod", "--wiredTigerCacheSizeGB", "0.25"]
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand({ ping: 1 })"]
+      test:
+        [
+          "CMD",
+          "mongosh",
+          "--quiet",
+          "-u",
+          "${MONGO_USER}",
+          "-p",
+          "${MONGO_PASSWORD}",
+          "--authenticationDatabase",
+          "admin",
+          "--eval",
+          "db.adminCommand({ ping: 1 })",
+        ]
 
   redis:
     image: redis:7
@@ -141,6 +236,10 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     mem_limit: 512m
+    ports:
+      # Console de gestão exigido aberto na defesa
+      # (docs/specs/08-normas-defesa-final.md).
+      - "15672:15672"
     env_file:
       - .env
     environment:

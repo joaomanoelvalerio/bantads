@@ -55,7 +55,7 @@ export function montarLinhaDoTempo(
   const porDia = agruparPorDia(extrato.movimentacoes);
   const ultimoDia = dataFim.startOf('day').toMillis();
 
-  let saldo = new Decimal(extrato.saldoAnterior);
+  let saldo = new Decimal(extrato.saldoAbertura);
   const dias: DiaDoExtrato[] = [];
 
   for (

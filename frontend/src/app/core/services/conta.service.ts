@@ -8,8 +8,9 @@ import { ApiService } from './api.service';
 export class ContaService {
   private readonly api = inject(ApiService);
 
+  /** R3: o front não sabe o próprio número de conta de antemão — resolve pelo CPF da sessão. */
   consultarPorCpf(cpf: string): Observable<Conta> {
-    return this.api.get<Conta>(`/contas/${encodeURIComponent(cpf)}`);
+    return this.api.get<Conta>(`/contas/cliente/${encodeURIComponent(cpf)}`);
   }
 
   /**

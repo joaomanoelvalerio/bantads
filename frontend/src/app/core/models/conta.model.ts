@@ -4,7 +4,8 @@ export interface LinkHateoas {
 
 export interface Conta {
   numero: string;
-  cpf: string;
+  cpfCliente: string;
+  cpfGerente: string;
   saldo: string;
   dataCriacao: string;
   _links?: Record<string, LinkHateoas>;

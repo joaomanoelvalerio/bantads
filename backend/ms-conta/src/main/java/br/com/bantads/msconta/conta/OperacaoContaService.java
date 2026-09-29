@@ -88,11 +88,17 @@ public class OperacaoContaService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conta destino não encontrada"));
 
         BigDecimal valor = requisicao.getValor();
+        // Cada lado do payload carrega tanto o próprio nome quanto o da ponta
+        // oposta: a linha de movimentação de cada conta expõe as duas partes
+        // (docs/design/arquitetura-atual.md, achado da Semana 05) — nenhum dos
+        // dois lados é derivável pelo MS Conta sozinho, os dois vêm do
+        // enriquecimento do Gateway (requisicao.getNomeOrigem/Destino).
         Map<String, Object> camposOrigem = new LinkedHashMap<>();
         camposOrigem.put("valor", valor.toPlainString());
+        camposOrigem.put("nomeOrigem", vazioParaNull(requisicao.getNomeOrigem())); // Map.of não aceita null; LinkedHashMap sim
         camposOrigem.put("contaDestino", destino.getNumeroConta());
         camposOrigem.put("cpfDestino", destino.getCpfCliente());
-        camposOrigem.put("nomeDestino", vazioParaNull(requisicao.getNomeDestino())); // Map.of não aceita null; LinkedHashMap sim
+        camposOrigem.put("nomeDestino", vazioParaNull(requisicao.getNomeDestino()));
         String payloadOrigem = escrever(camposOrigem);
 
         Map<String, Object> camposDestino = new LinkedHashMap<>();
@@ -100,6 +106,7 @@ public class OperacaoContaService {
         camposDestino.put("contaOrigem", origem.getNumeroConta());
         camposDestino.put("cpfOrigem", origem.getCpfCliente());
         camposDestino.put("nomeOrigem", vazioParaNull(requisicao.getNomeOrigem()));
+        camposDestino.put("nomeDestino", vazioParaNull(requisicao.getNomeDestino()));
         String payloadDestino = escrever(camposDestino);
 
         DataIntegrityViolationException ultimoConflito = null;

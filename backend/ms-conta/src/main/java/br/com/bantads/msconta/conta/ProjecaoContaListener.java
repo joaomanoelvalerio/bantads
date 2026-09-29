@@ -85,10 +85,9 @@ public class ProjecaoContaListener {
                 registrarMovimentacao(conta, mensagem, TipoMovimentacao.SAQUE, valor, null, null, null, null);
             }
             case TRANSFERENCIA_ORIGEM -> {
-                // Payload deste lado só descreve a ponta oposta (destino) — ver
-                // formato em EventoContaService/db/02-seed.sql. O nome do próprio
-                // titular não é conhecido pelo MS Conta nesse evento; fica null aqui
-                // (quem o injeta é o API Gateway ao enriquecer R6, S5).
+                // cpfOrigem vem da própria conta (o MS Conta sabe disso sozinho);
+                // nomeOrigem/nomeDestino não são deriváveis aqui — os dois vêm do
+                // payload, injetados pelo Gateway ao enriquecer R6 (S5).
                 BigDecimal valor = valor(payload);
                 conta.setSaldo(conta.getSaldo().subtract(valor));
                 registrarMovimentacao(
@@ -97,12 +96,13 @@ public class ProjecaoContaListener {
                         TipoMovimentacao.TRANSFERENCIA,
                         valor,
                         conta.getCpfCliente(),
-                        null,
+                        payload.path("nomeOrigem").asText(null),
                         payload.path("cpfDestino").asText(null),
                         payload.path("nomeDestino").asText(null));
             }
             case TRANSFERENCIA_DESTINO -> {
-                // Simetricamente, este payload só descreve a ponta origem.
+                // Simetricamente: cpfDestino vem da própria conta, os dois nomes
+                // vêm do payload enriquecido pelo Gateway.
                 BigDecimal valor = valor(payload);
                 conta.setSaldo(conta.getSaldo().add(valor));
                 registrarMovimentacao(
@@ -113,7 +113,7 @@ public class ProjecaoContaListener {
                         payload.path("cpfOrigem").asText(null),
                         payload.path("nomeOrigem").asText(null),
                         conta.getCpfCliente(),
-                        null);
+                        payload.path("nomeDestino").asText(null));
             }
             case GERENTE_ALTERADO -> conta.setCpfGerente(payload.get("cpfGerenteNovo").asText());
             case CRIADO -> throw new IllegalStateException("CRIADO é tratado em aplicarCriacao");

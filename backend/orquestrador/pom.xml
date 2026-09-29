@@ -27,9 +27,17 @@
 		<url/>
 	</scm>
 	<properties>
-		<java.version>26</java.version>
+		<java.version>21</java.version>
 	</properties>
 	<dependencies>
+		<dependency>
+			<!-- Todo MS precisa expor GET /health (docs/specs/05-nao-funcionais/11-health-reboot.md);
+			     também é o que mantém o processo vivo — sem nenhum servidor web nem
+			     @RabbitListener, o JVM não tinha nada segurando a thread principal
+			     e o container encerrava sozinho (exit 0) logo depois de subir. -->
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-amqp</artifactId>
@@ -37,11 +45,14 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-session-data-redis</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-amqp</artifactId>
-    </dependency>
+		</dependency>
+		<dependency>
+			<!-- Estado da SAGA e jobs assíncronos (RedisTemplate) — session-data-redis
+			     traz isto de propósito diferente (HttpSession), então declarado
+			     explicitamente para não depender de transitividade. -->
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-amqp-test</artifactId>
@@ -55,6 +66,7 @@
 	</dependencies>
 
 	<build>
+		<finalName>orquestrador</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
