@@ -95,21 +95,14 @@
                 @if (andamentoDe(linha.solicitacao.cpf); as andamento) {
                   <span class="processando" role="status">
                     <mat-progress-spinner mode="indeterminate" [diameter]="16" />
-                    <span>
-                      {{ andamento === 'ACOMPANHANDO' ? 'Aprovando...' : 'Aguardando confirmação' }}
-                    </span>
+                    <span>{{ rotuloDoAndamento[andamento] }}</span>
                   </span>
                 } @else if (linha.solicitacao.status === 'PENDENTE') {
                   <div class="acoes-da-linha">
                     <button matButton="filled" type="button" (click)="aprovar(linha.solicitacao)">
                       Aprovar
                     </button>
-                    <button
-                      matButton="outlined"
-                      type="button"
-                      disabled
-                      aria-describedby="nota-recusar"
-                    >
+                    <button matButton="outlined" type="button" (click)="recusar(linha.solicitacao)">
                       Recusar
                     </button>
                   </div>
@@ -120,9 +113,5 @@
         </tbody>
       </table>
     </div>
-
-    <p class="nota" id="nota-recusar">
-      A recusa de solicitações (R10) entra em uma entrega futura; o botão está desabilitado.
-    </p>
   }
 </section>

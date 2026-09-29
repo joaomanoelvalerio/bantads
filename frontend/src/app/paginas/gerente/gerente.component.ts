@@ -2,6 +2,7 @@ import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatDialog } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { switchMap } from 'rxjs';
 import { Cliente } from '../../core/models/cliente.model';
@@ -16,16 +17,23 @@ import { MensagemErroComponent } from '../../shared/components/mensagem-erro/men
 import { dataHoraLegivel } from '../../shared/formato/data-hora';
 import { DocumentoPipe } from '../../shared/pipes/documento.pipe';
 import { MoedaPipe } from '../../shared/pipes/moeda.pipe';
+import { DadosDaRecusa, RecusarSolicitacaoDialogComponent } from './recusar-solicitacao.dialog';
 
 type FiltroDeStatus = 'TODAS' | StatusSolicitacao;
 
 /**
- * Linha em que a tela iniciou uma aprovação. `ACOMPANHANDO` é o polling vivo;
- * `TEMPO_ESGOTADO` é o job que o front deixou de consultar sem saber o desfecho —
- * nos dois casos a linha fica sem botões, para não aprovar a mesma solicitação
- * duas vezes.
+ * Linha em que a tela iniciou uma decisão. `ACOMPANHANDO` é o polling vivo da
+ * aprovação; `TEMPO_ESGOTADO` é o job que o front deixou de consultar sem saber o
+ * desfecho; `RECUSANDO` é a requisição síncrona de rejeição em voo. Em todos os
+ * casos a linha fica sem botões, para não decidir a mesma solicitação duas vezes.
  */
-type AndamentoDaLinha = 'ACOMPANHANDO' | 'TEMPO_ESGOTADO';
+type AndamentoDaLinha = 'ACOMPANHANDO' | 'TEMPO_ESGOTADO' | 'RECUSANDO';
+
+const ROTULO_DO_ANDAMENTO: Readonly<Record<AndamentoDaLinha, string>> = {
+  ACOMPANHANDO: 'Aprovando...',
+  TEMPO_ESGOTADO: 'Aguardando confirmação',
+  RECUSANDO: 'Recusando...',
+};
 
 interface LinhaDaTabela {
   solicitacao: SolicitacaoAnalisada;
@@ -49,7 +57,7 @@ const FILTROS: readonly { valor: FiltroDeStatus; rotulo: string }[] = [
 ];
 
 /**
- * R8 e R9. A tabela nunca se atualiza sozinha: quem manda é o dado recarregado,
+ * R8, R9 e R10. A tabela nunca se atualiza sozinha: quem manda é o dado recarregado,
  * por ação explícita ou depois de um job chegar a um desfecho.
  */
 @Component({
@@ -69,10 +77,18 @@ const FILTROS: readonly { valor: FiltroDeStatus; rotulo: string }[] = [
 export class GerenteComponent {
   private readonly solicitacoes = inject(SolicitacaoService);
   private readonly jobs = inject(JobsService);
+  private readonly dialogo = inject(MatDialog);
   private readonly destruicao = inject(DestroyRef);
+
+  /**
+   * Motivo digitado numa recusa que falhou, por CPF. Reabre o diálogo preenchido
+   * para o reenvio; some quando a recusa daquela linha dá certo.
+   */
+  private readonly motivosPendentes = new Map<string, { motivo: string; erro: string }>();
 
   protected readonly sessao = inject(SessaoService);
   protected readonly filtros = FILTROS;
+  protected readonly rotuloDoAndamento = ROTULO_DO_ANDAMENTO;
 
   protected readonly lista = signal<readonly SolicitacaoAnalisada[]>([]);
   protected readonly carregando = signal(false);
@@ -161,6 +177,80 @@ export class GerenteComponent {
 
           this.erroDaAcao.set(falha.message);
           this.carregar();
+        },
+      });
+  }
+
+  protected recusar(solicitacao: SolicitacaoAnalisada): void {
+    // Um diálogo aberto por vez: duplo clique não abre dois para a mesma linha.
+    if (
+      solicitacao.status !== 'PENDENTE' ||
+      this.andamentoDe(solicitacao.cpf) !== null ||
+      this.dialogo.openDialogs.length > 0
+    ) {
+      return;
+    }
+
+    const anterior = this.motivosPendentes.get(solicitacao.cpf);
+
+    this.dialogo
+      .open<RecusarSolicitacaoDialogComponent, DadosDaRecusa, string>(
+        RecusarSolicitacaoDialogComponent,
+        {
+          data: {
+            nome: solicitacao.nome,
+            cpf: solicitacao.cpf,
+            motivo: anterior?.motivo ?? '',
+            erro: anterior?.erro ?? null,
+          },
+          width: '520px',
+          maxWidth: 'calc(100vw - 32px)',
+        },
+      )
+      .afterClosed()
+      .pipe(takeUntilDestroyed(this.destruicao))
+      .subscribe((motivo) => {
+        // Cancelado: nada é enviado e a linha fica como estava.
+        if (motivo !== undefined) {
+          this.enviarRecusa(solicitacao, motivo);
+        }
+      });
+  }
+
+  /** Síncrono: 200 e pronto. Sem job, sem polling. */
+  private enviarRecusa(solicitacao: SolicitacaoAnalisada, motivo: string): void {
+    if (this.andamentoDe(solicitacao.cpf) !== null) {
+      return;
+    }
+
+    this.marcar(solicitacao.cpf, 'RECUSANDO');
+    this.sucesso.set(null);
+    this.aviso.set(null);
+    this.erroDaAcao.set(null);
+
+    this.solicitacoes
+      .rejeitar(solicitacao.cpf, motivo)
+      .pipe(takeUntilDestroyed(this.destruicao))
+      .subscribe({
+        next: () => {
+          this.desmarcar(solicitacao.cpf);
+          this.motivosPendentes.delete(solicitacao.cpf);
+          this.sucesso.set(`Solicitação de ${solicitacao.nome} recusada.`);
+          this.carregar();
+        },
+        error: (falha: ErroApi) => {
+          this.desmarcar(solicitacao.cpf);
+
+          if (falha.status === 401) {
+            return;
+          }
+
+          // O motivo fica guardado: reabrir Recusar na linha traz o texto e o erro.
+          this.motivosPendentes.set(solicitacao.cpf, { motivo, erro: falha.message });
+          this.erroDaAcao.set(falha.message);
+          this.aviso.set(
+            `O motivo digitado para ${solicitacao.nome} foi mantido. Use Recusar novamente para reenviar.`,
+          );
         },
       });
   }

@@ -13,6 +13,7 @@ import { ClienteService } from '../../core/services/cliente.service';
 import { CabecalhoComponent } from '../../shared/components/cabecalho/cabecalho.component';
 import { MensagemErroComponent } from '../../shared/components/mensagem-erro/mensagem-erro.component';
 import { RodapeComponent } from '../../shared/components/rodape/rodape.component';
+import { FUSO_BANTADS } from '../../shared/formato/data-hora';
 import { mascaraCpf, mascaraTelefone } from '../../shared/formato/mascara-documento';
 import { apenasDigitos, mascaraValor } from '../../shared/formato/mascara-valor';
 import { MoedaPipe } from '../../shared/pipes/moeda.pipe';
@@ -147,7 +148,7 @@ export class AutocadastroComponent {
       nome: dados.nome,
       email: dados.email,
       salario: dados.salario,
-      enviadaEm: DateTime.now().setLocale('pt-BR').toFormat("dd/LL/yyyy 'às' HH:mm"),
+      enviadaEm: DateTime.now().setZone(FUSO_BANTADS).setLocale('pt-BR').toFormat("dd/LL/yyyy 'às' HH:mm"),
     });
   }
 

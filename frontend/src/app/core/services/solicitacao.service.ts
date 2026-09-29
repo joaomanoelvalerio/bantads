@@ -27,4 +27,13 @@ export class SolicitacaoService {
   aprovar(cpf: string): Observable<RespostaAceita> {
     return this.api.post<RespostaAceita>(`/solicitacoes/${encodeURIComponent(cpf)}/aprovar`, {});
   }
+
+  /**
+   * R10. Operação síncrona: 200 quando a rejeição é gravada. O e-mail ao cliente
+   * é disparado pelo back-end sem retorno ao front; quem precisa do novo estado
+   * recarrega a lista.
+   */
+  rejeitar(cpf: string, motivo: string): Observable<void> {
+    return this.api.post<void>(`/solicitacoes/${encodeURIComponent(cpf)}/rejeitar`, { motivo });
+  }
 }

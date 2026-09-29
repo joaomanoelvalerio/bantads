@@ -8,3 +8,25 @@
   display: flex;
   gap: 8px;
 }
+
+.linha--ocupada {
+  background: var(--bantads-fundo);
+}
+
+.voce {
+  margin-left: 4px;
+  color: var(--bantads-texto-fraco);
+  font-size: 13px;
+}
+
+.processando {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--bantads-texto-fraco);
+  font-size: 13px;
+}
+
+.recarregar-aviso {
+  margin: -8px 0 20px;
+}

@@ -22,6 +22,21 @@
     </div>
   </header>
 
+  <app-mensagem-erro [mensagem]="erroDaAcao()" />
+
+  @if (aviso(); as mensagem) {
+    <app-mensagem-aviso [mensagem]="mensagem" />
+    <button
+      matButton="outlined"
+      type="button"
+      class="recarregar-aviso"
+      [disabled]="carregando()"
+      (click)="recarregarAposAviso()"
+    >
+      Recarregar listagem
+    </button>
+  }
+
   @if (confirmacao(); as mensagem) {
     <p class="sucesso" role="status">{{ mensagem }}</p>
   }
@@ -57,24 +72,44 @@
         </thead>
         <tbody>
           @for (gerente of lista(); track gerente.cpf) {
-            <tr>
-              <td>{{ gerente.nome }}</td>
+            <tr [class.linha--ocupada]="andamentoDe(gerente.cpf) !== null">
+              <td>
+                {{ gerente.nome }}
+                @if (ehOProprio(gerente)) {
+                  <span class="voce">(você)</span>
+                }
+              </td>
               <td class="numerico">{{ gerente.cpf | documento: 'cpf' }}</td>
               <td>{{ gerente.email }}</td>
               <td class="numerico">{{ gerente.telefone | documento: 'telefone' }}</td>
               <td class="numerico celula--direita">{{ gerente.quantidadeClientes }}</td>
               <td class="celula--acoes">
-                <div class="acoes-da-linha">
-                  <a matButton="outlined" [routerLink]="[gerente.cpf, 'editar']">Editar</a>
-                  <button
-                    matButton="outlined"
-                    type="button"
-                    disabled
-                    aria-describedby="nota-remover"
-                  >
-                    Remover
-                  </button>
-                </div>
+                @if (andamentoDe(gerente.cpf); as andamento) {
+                  <span class="processando" role="status">
+                    <mat-progress-spinner mode="indeterminate" [diameter]="16" />
+                    <span>
+                      {{ andamento === 'REMOVENDO' ? 'Removendo...' : 'Aguardando confirmação' }}
+                    </span>
+                  </span>
+                } @else {
+                  <div class="acoes-da-linha">
+                    <a matButton="outlined" [routerLink]="[gerente.cpf, 'editar']">Editar</a>
+                    @if (ehOProprio(gerente)) {
+                      <button
+                        matButton="outlined"
+                        type="button"
+                        disabled
+                        aria-describedby="nota-autorremocao"
+                      >
+                        Remover
+                      </button>
+                    } @else {
+                      <button matButton="outlined" type="button" (click)="remover(gerente)">
+                        Remover
+                      </button>
+                    }
+                  </div>
+                }
               </td>
             </tr>
           }
@@ -82,8 +117,10 @@
       </table>
     </div>
 
-    <p class="nota" id="nota-remover">
-      A remoção de gerentes (R15) entra em uma entrega futura; o botão está desabilitado.
-    </p>
+    @if (sessaoNaLista()) {
+      <p class="nota" id="nota-autorremocao">
+        Remover fica desabilitado na sua própria linha: um gerente não pode remover a si mesmo.
+      </p>
+    }
   }
 </section>
