@@ -1,6 +1,6 @@
 import { LinkHateoas } from './conta.model';
 
-export type TipoMovimentacao = 'DEPOSITO' | 'SAQUE' | 'TRANSFERENCIA';
+export type TipoMovimentacao = 'depósito' | 'saque' | 'transferência';
 
 /**
  * Movimentação como devolvida pelo extrato. Origem e destino só vêm preenchidos em
