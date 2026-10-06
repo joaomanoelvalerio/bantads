@@ -12,7 +12,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 /**
- * Idempotência por (sagaId, tipo) — docs/specs/05-nao-funcionais/07-rabbitmq-filas.md,
+ * Idempotência por (sagaId, tipo),
  * S8. Guarda só `gerente.inserir` — reentrega at-least-once não pode criar
  * um segundo gerente; os demais comandos deste serviço já são idempotentes
  * por construção.

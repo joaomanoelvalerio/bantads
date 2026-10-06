@@ -1,4 +1,4 @@
--- Seed do MS Gerente — dados pré-cadastrados (docs/specs/05-dados-pre-cadastrados.md).
+-- Seed do MS Gerente — dados pré-cadastrados.
 -- Gadamântio propositalmente não aparece em nenhuma conta de ms_conta: é o
 -- "gerente com 0 clientes/0 contas" usado para testar R9 e R13.
 
