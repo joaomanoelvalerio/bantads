@@ -40,7 +40,7 @@ public class SeedRunner implements CommandLineRunner {
                 novoUsuario("76179646090", "cli5@bantads.com.br", TipoUsuario.CLIENTE, senhaHash),
                 novoUsuario("98574307084", "ger1@bantads.com.br", TipoUsuario.GERENTE, senhaHash),
                 novoUsuario("64065268052", "ger2@bantads.com.br", TipoUsuario.GERENTE, senhaHash),
-                novoUsuario("723862179060", "ger3@bantads.com.br", TipoUsuario.GERENTE, senhaHash),
+                novoUsuario("23862179060", "ger3@bantads.com.br", TipoUsuario.GERENTE, senhaHash),
                 novoUsuario("40501740066", "ger4@bantads.com.br", TipoUsuario.GERENTE, senhaHash));
 
         usuarioRepository.saveAll(usuarios);
