@@ -49,7 +49,7 @@ public class SolicitacaoService {
     /**
      * Compensação do passo 1 — caso especial (login duplicado no MS Auth,
      * passo 5): NÃO devolve a Pendente, pois a mesma tentativa falharia de
-     * novo indefinidamente (docs/specs/05-nao-funcionais/09-sagas-api-compositions.md).
+     * novo indefinidamente.
      * Idempotente como a reversão normal.
      */
     public void marcarNaoAprovada(String cpf, String motivo) {
@@ -65,7 +65,7 @@ public class SolicitacaoService {
      * R10 — Rejeitar Cliente: operação síncrona, direto sobre a Pendente (ao
      * contrário de R9, não passa pelo Orquestrador). Devolve a solicitação
      * atualizada pro controller publicar o e-mail fire-and-forget com o
-     * motivo (docs/specs/02-requisitos-funcionais.md).
+     * motivo.
      */
     public Optional<Solicitacao> rejeitarPendente(String cpf, String motivo) {
         Optional<Solicitacao> pendente = solicitacaoRepository.findFirstByCpfAndStatus(cpf, StatusSolicitacao.PENDENTE);
@@ -82,8 +82,7 @@ public class SolicitacaoService {
      * R1 — Autocadastro: grava a solicitação como Pendente e retorna (operação
      * síncrona; a aprovação é feita depois pelo gerente — R9). Unicidade de CPF
      * e e-mail entre solicitações "ativas" (Pendente/Aprovado) é garantida por
-     * índices únicos parciais no banco (ver db/01-schema.sql e
-     * docs/design/suposicoes.md) — mais seguro contra corrida do que checar e
+     * índices únicos parciais no banco (ver db/01-schema.sql) — mais seguro contra corrida do que checar e
      * inserir em dois passos separados.
      */
     public Solicitacao autocadastrar(NovoClienteRequest requisicao) {

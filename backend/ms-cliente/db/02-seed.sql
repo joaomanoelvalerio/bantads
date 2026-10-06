@@ -1,4 +1,4 @@
--- Seed do MS Cliente — dados pré-cadastrados (docs/specs/05-dados-pre-cadastrados.md).
+-- Seed do MS Cliente — dados pré-cadastrados.
 -- Endereço é livre por definição do enunciado ("equipe escolhe"); usamos
 -- endereços fictícios em Curitiba/PR, distintos por cliente.
 
@@ -14,7 +14,7 @@ VALUES
 -- Cada cliente do seed já nasce com uma solicitação Aprovada correspondente,
 -- coerente com a conta/gerente já atribuídos em ms_conta (ver R9: conta e
 -- usuário só existem após aprovação). decidido_em replica a data de criação
--- da conta em docs/specs/05-dados-pre-cadastrados.md.
+-- da conta no enunciado.
 INSERT INTO ms_cliente.solicitacoes
     (cpf, nome, email, telefone, salario, logradouro, numero, complemento, cep, cidade, uf, status, motivo, decidido_em)
 VALUES

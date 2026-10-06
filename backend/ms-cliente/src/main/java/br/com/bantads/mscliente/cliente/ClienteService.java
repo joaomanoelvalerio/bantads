@@ -26,8 +26,7 @@ public class ClienteService {
     /**
      * SAGA Aprovar Cliente (R9, passo 4) — copia os dados da solicitação já
      * aprovada. Idempotente: uma reentrega do comando (mesmo cpf) não duplica
-     * nem falha, só devolve o que já existe — RabbitMQ entrega at-least-once
-     * (docs/specs/05-nao-funcionais/07-rabbitmq-filas.md).
+     * nem falha, só devolve o que já existe — RabbitMQ entrega at-least-once.
      */
     public Cliente criar(Cliente novoCliente) {
         return clienteRepository.findById(novoCliente.getCpf()).orElseGet(() -> clienteRepository.save(novoCliente));

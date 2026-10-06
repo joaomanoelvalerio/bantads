@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * Valores monetários trafegam como string em todo payload JSON (nunca como number,
- * para evitar imprecisão de float) — ver docs/specs/05-nao-funcionais/01-tecnologias-padroes-dados.md.
+ * para evitar imprecisão de float).
  */
 @Configuration
 public class JacksonConfig {

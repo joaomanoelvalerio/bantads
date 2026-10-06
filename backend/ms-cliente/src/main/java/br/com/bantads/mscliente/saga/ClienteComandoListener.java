@@ -14,11 +14,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
 /**
  * SAGA Aprovar Cliente (R9) — passos 1 e 4, os dois de responsabilidade do MS
- * Cliente (docs/specs/05-nao-funcionais/09-sagas-api-compositions.md).
+ * Cliente.
  */
 @Component
 public class ClienteComandoListener {
@@ -33,12 +34,17 @@ public class ClienteComandoListener {
 
     private final SolicitacaoService solicitacaoService;
     private final ClienteService clienteService;
+    private final ComandoProcessadoRepository comandoProcessadoRepository;
     private final RabbitTemplate rabbitTemplate;
 
     public ClienteComandoListener(
-            SolicitacaoService solicitacaoService, ClienteService clienteService, RabbitTemplate rabbitTemplate) {
+            SolicitacaoService solicitacaoService,
+            ClienteService clienteService,
+            ComandoProcessadoRepository comandoProcessadoRepository,
+            RabbitTemplate rabbitTemplate) {
         this.solicitacaoService = solicitacaoService;
         this.clienteService = clienteService;
+        this.comandoProcessadoRepository = comandoProcessadoRepository;
         this.rabbitTemplate = rabbitTemplate;
     }
 
@@ -61,12 +67,18 @@ public class ClienteComandoListener {
 
     private void aprovar(ComandoSaga comando) {
         String cpf = texto(comando.getPayload(), "cpf");
+        if (comandoProcessadoRepository.findByIdSagaIdAndIdTipo(comando.getSagaId(), comando.getTipo()).isPresent()) {
+            log.info("cliente.aprovar-solicitacao já processado antes para a saga {} — sem aprovar de novo", comando.getSagaId());
+            responder(comando, "SUCESSO", null, null);
+            return;
+        }
         try {
             Optional<Solicitacao> aprovada = solicitacaoService.aprovarPendente(cpf);
             if (aprovada.isEmpty()) {
                 responder(comando, "FALHA", null, "Solicitação Pendente não encontrada para o CPF " + cpf);
                 return;
             }
+            salvarComandoProcessado(comando);
             responder(comando, "SUCESSO", paraMapa(aprovada.get()), null);
         } catch (Exception e) {
             log.error("Falha ao aprovar solicitação para a saga {}", comando.getSagaId(), e);
@@ -77,7 +89,9 @@ public class ClienteComandoListener {
     private void reverter(ComandoSaga comando) {
         String cpf = texto(comando.getPayload(), "cpf");
         try {
-            solicitacaoService.reverterParaPendente(cpf);
+            if (comandoProcessadoRepository.findByIdSagaIdAndIdTipo(comando.getSagaId(), TIPO_APROVAR).isPresent()) {
+                solicitacaoService.reverterParaPendente(cpf);
+            }
             responder(comando, "SUCESSO", null, null);
         } catch (Exception e) {
             log.error("Falha ao reverter solicitação para Pendente na saga {}", comando.getSagaId(), e);
@@ -98,6 +112,12 @@ public class ClienteComandoListener {
     }
 
     private void criar(ComandoSaga comando) {
+        if (comandoProcessadoRepository.findByIdSagaIdAndIdTipo(comando.getSagaId(), comando.getTipo()).isPresent()) {
+            log.info("cliente.criar já processado antes para a saga {} — confirmando sucesso de novo", comando.getSagaId());
+            responder(comando, "SUCESSO", null, null);
+            return;
+        }
+
         Map<String, Object> dados = comando.getPayload();
         try {
             Cliente cliente = new Cliente();
@@ -114,10 +134,19 @@ public class ClienteComandoListener {
             cliente.setUf(texto(dados, "uf"));
 
             clienteService.criar(cliente);
+            salvarComandoProcessado(comando);
             responder(comando, "SUCESSO", null, null);
         } catch (Exception e) {
             log.error("Falha ao criar cliente para a saga {}", comando.getSagaId(), e);
             responder(comando, "FALHA", null, "Falha ao criar cliente: " + e.getMessage());
+        }
+    }
+
+    private void salvarComandoProcessado(ComandoSaga comando) {
+        try {
+            comandoProcessadoRepository.save(new ComandoProcessado(comando.getSagaId(), comando.getTipo(), "{}"));
+        } catch (DataIntegrityViolationException e) {
+            log.warn("Corrida ao salvar o registro de idempotência da saga {} — outra entrega venceu", comando.getSagaId());
         }
     }
 

@@ -1,7 +1,7 @@
 -- MS Cliente — schema-per-service: todo o domínio de Cliente vive no schema
 -- `ms_cliente`, isolado dos schemas dos demais microsserviços.
 --
--- Dados mínimos exigidos por docs/specs/03-decomposicao-subdominio.md. Note que
+-- Dados mínimos exigidos. Note que
 -- nenhuma das duas tabelas guarda senha — autenticação é responsabilidade do
 -- MS Auth (MongoDB), criado somente após aprovação (R9).
 
@@ -30,7 +30,7 @@ CREATE TABLE ms_cliente.solicitacoes (
     criado_em    TIMESTAMPTZ   NOT NULL DEFAULT now()
 );
 
--- Suposição (registrar no PDF de suposições — ver docs/design/suposicoes.md):
+-- Suposição (registrar no PDF de suposições):
 -- R1 diz que não pode haver "novo autocadastro se já existir um (mesmo que
 -- ainda Pendente)". Interpretamos isso como "CPF com solicitação Pendente ou
 -- já Aprovada bloqueia nova tentativa"; uma solicitação Não aprovada libera
@@ -63,4 +63,12 @@ CREATE TABLE ms_cliente.clientes (
     cep          VARCHAR(9)    NOT NULL,
     cidade       VARCHAR(120)  NOT NULL,
     uf           VARCHAR(2)    NOT NULL
+);
+
+CREATE TABLE ms_cliente.comandos_processados (
+    saga_id       VARCHAR(100)  NOT NULL,
+    tipo          VARCHAR(100)  NOT NULL,
+    resposta      JSONB         NOT NULL,
+    processado_em TIMESTAMPTZ   NOT NULL DEFAULT now(),
+    PRIMARY KEY (saga_id, tipo)
 );
