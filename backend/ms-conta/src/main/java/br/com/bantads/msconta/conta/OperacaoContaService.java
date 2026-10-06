@@ -14,13 +14,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * R4 (depósito), R5 (saque) e R6 (transferência) — docs/specs/02-requisitos-funcionais.md.
+ * R4 (depósito), R5 (saque) e R6 (transferência).
  * Depósito só acrescenta um evento (EventoContaService cuida do retry de
  * versão). Saque e transferência debitam de uma conta, então cada tentativa
  * precisa refazer o replay do saldo — não basta re-tentar o append: se a
  * corrida for justamente por causa do saldo (duas operações concorrentes que,
  * juntas, estourariam o saldo), só a releitura pós-conflito pega isso
- * (docs/specs/05-nao-funcionais/10-cqrs.md, "a operação perdedora refaz o
+ * ("a operação perdedora refaz o
  * replay e revalida").
  */
 @Service
@@ -90,7 +90,7 @@ public class OperacaoContaService {
         BigDecimal valor = requisicao.getValor();
         // Cada lado do payload carrega tanto o próprio nome quanto o da ponta
         // oposta: a linha de movimentação de cada conta expõe as duas partes
-        // (docs/design/arquitetura-atual.md, achado da Semana 05) — nenhum dos
+        // (achado da Semana 05) — nenhum dos
         // dois lados é derivável pelo MS Conta sozinho, os dois vêm do
         // enriquecimento do Gateway (requisicao.getNomeOrigem/Destino).
         Map<String, Object> camposOrigem = new LinkedHashMap<>();

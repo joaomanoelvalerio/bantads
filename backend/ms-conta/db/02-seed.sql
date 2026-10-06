@@ -1,4 +1,4 @@
--- Seed do MS Conta — dados pré-cadastrados (docs/specs/05-dados-pre-cadastrados.md).
+-- Seed do MS Conta — dados pré-cadastrados.
 --
 -- Popula os DOIS lados do CQRS de forma consistente: o event store (replay
 -- reproduz exatamente os saldos abaixo) e o read model (projeção equivalente).

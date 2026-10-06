@@ -25,8 +25,7 @@ import org.springframework.boot.test.context.SpringBootTest;
  * Prova de ponta a ponta do pipeline de CQRS da Semana 04: append (command) -&gt;
  * publica em ms.conta.events (AMQP real, não mockado) -&gt; ProjecaoContaListener
  * consome e projeta no read model -&gt; reentrega da mesma mensagem não duplica o
- * efeito (idempotência, exigida pela entrega at-least-once do RabbitMQ — ver
- * docs/specs/05-nao-funcionais/10-cqrs.md).
+ * efeito (idempotência, exigida pela entrega at-least-once do RabbitMQ).
  */
 @SpringBootTest
 class CqrsPipelineTest {

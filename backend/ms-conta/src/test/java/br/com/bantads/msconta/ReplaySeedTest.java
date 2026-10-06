@@ -10,9 +10,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 /**
  * Prova automatizada do marco da Semana 04: "replay do seed reproduz
- * exatamente os saldos da tabela do enunciado" (docs/specs/10-cronograma.md).
- * Os valores esperados vêm de docs/specs/05-dados-pre-cadastrados.md, já
- * reconciliados manualmente em docs/design/modelagem-ct.md. Roda contra o
+ * exatamente os saldos da tabela do enunciado".
+ * Os valores esperados vêm do enunciado, já
+ * reconciliados manualmente. Roda contra o
  * Postgres real (seed aplicado pelos scripts em db/) — ver README de como
  * executar via Docker.
  */

@@ -16,7 +16,7 @@ import lombok.Setter;
  * Espelha ms_conta.contas — read model desnormalizado, lado QUERY do CQRS
  * (backend/ms-conta/db/01-schema.sql). O saldo aqui é só para leitura (R3/R7/
  * R11/R16); validação de saque/transferência sempre replaya o command side
- * (ver docs/design/modelagem-ct.md) — trabalho da S5.
+ * — trabalho da S5.
  */
 @Entity
 @Table(schema = "ms_conta", name = "contas")

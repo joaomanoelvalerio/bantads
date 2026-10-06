@@ -15,10 +15,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * R3-R7 (docs/specs/02-requisitos-funcionais.md). `X-User-CPF` é injetado
- * pelo Gateway após validar a sessão (docs/specs/05-nao-funcionais/03-api-gateway.md)
+ * R3-R7. `X-User-CPF` é injetado
+ * pelo Gateway após validar a sessão
  * — aqui só confiamos nele; sem Gateway na frente, é preciso enviá-lo manualmente.
- * HATEOAS (`_links`) entra na S9 — ver docs/design/modelagem-ct.md.
  */
 @RestController
 @RequestMapping("/contas")

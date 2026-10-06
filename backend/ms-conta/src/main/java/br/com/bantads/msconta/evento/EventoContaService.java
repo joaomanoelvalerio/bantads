@@ -35,7 +35,7 @@ public class EventoContaService {
             } catch (DataIntegrityViolationException conflito) {
                 // Corrida na mesma conta (ex.: dois saques simultâneos) — outra
                 // transação já usou a próxima versão; tenta de novo com a versão
-                // seguinte (docs/specs/05-nao-funcionais/10-cqrs.md).
+                // seguinte.
                 ultimoConflito = conflito;
             }
         }

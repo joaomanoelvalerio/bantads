@@ -11,11 +11,10 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * Sincronização do CQRS (comando -&gt; query) via `ms.conta.events`, default
- * exchange (docs/specs/05-nao-funcionais/07-rabbitmq-filas.md). DLQ dedicada
+ * exchange. DLQ dedicada
  * — mensagens que esgotam as retentativas do listener (ver application.yml)
  * são roteadas para cá; reprocessamento é manual (não automático, para evitar
- * loop com mensagem "venenosa" — ver docs/specs/05-nao-funcionais/07-rabbitmq-filas.md,
- * "Caso especial — ms.conta.events.dlq").
+ * loop com mensagem "venenosa").
  */
 @Configuration
 public class RabbitMqConfig {

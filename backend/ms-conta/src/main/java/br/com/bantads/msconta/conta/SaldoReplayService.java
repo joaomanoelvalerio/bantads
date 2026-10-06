@@ -12,8 +12,7 @@ import org.springframework.stereotype.Service;
  * Lado COMMAND: saldo reconstruído por replay/fold dos eventos, nunca lido do
  * read model. R5/R6 (S5) chamam isto para validar saldo antes de saque/
  * transferência — o read model (ms_conta.contas.saldo) é só para leitura
- * (R3/R7/R11/R16), podendo estar momentaneamente defasado (ver
- * docs/design/modelagem-ct.md e docs/specs/05-nao-funcionais/10-cqrs.md).
+ * (R3/R7/R11/R16), podendo estar momentaneamente defasado.
  */
 @Service
 public class SaldoReplayService {

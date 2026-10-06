@@ -2,6 +2,7 @@ package br.com.bantads.msconta.conta;
 
 import br.com.bantads.msconta.config.RabbitMqConfig;
 import br.com.bantads.msconta.evento.EventoContaMensagem;
+import br.com.bantads.msconta.evento.EventoContaRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
@@ -14,21 +15,24 @@ import org.springframework.transaction.annotation.Transactional;
  * ms_conta.movimentacoes em sincronia com o event store. Precisa ser
  * IDEMPOTENTE porque o RabbitMQ entrega at-least-once — usa
  * contas.ultima_versao_aplicada como guarda: eventos com versao já aplicada
- * são ignorados (docs/specs/05-nao-funcionais/10-cqrs.md).
+ * são ignorados.
  */
 @Component
 public class ProjecaoContaListener {
 
     private final ContaRepository contaRepository;
     private final MovimentacaoRepository movimentacaoRepository;
+    private final EventoContaRepository eventoContaRepository;
     private final ObjectMapper objectMapper;
 
     public ProjecaoContaListener(
             ContaRepository contaRepository,
             MovimentacaoRepository movimentacaoRepository,
+            EventoContaRepository eventoContaRepository,
             ObjectMapper objectMapper) {
         this.contaRepository = contaRepository;
         this.movimentacaoRepository = movimentacaoRepository;
+        this.eventoContaRepository = eventoContaRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -57,6 +61,9 @@ public class ProjecaoContaListener {
     private void aplicarCriacao(EventoContaMensagem mensagem) {
         if (contaRepository.existsById(mensagem.objetoId())) {
             return; // já projetado
+        }
+        if (!eventoContaRepository.existsById(mensagem.id())) {
+            return;
         }
 
         JsonNode payload = ler(mensagem);

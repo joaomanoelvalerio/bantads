@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * R7 — Consulta de extrato (docs/specs/02-requisitos-funcionais.md). Servido
+ * R7 — Consulta de extrato. Servido
  * inteiramente pelo lado QUERY (contas/movimentacoes): ao contrário da
  * validação de saldo de R5/R6, aqui não é o replay do command que importa —
  * é justamente o read model que o front consome. saldoAbertura é o fold das

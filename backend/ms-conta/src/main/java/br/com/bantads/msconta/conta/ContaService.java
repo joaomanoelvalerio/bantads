@@ -55,8 +55,8 @@ public class ContaService {
 
     /**
      * Verificação de posse (R4/R5/R6/R7): a conta operada precisa pertencer ao
-     * CPF do header X-User-CPF, injetado pelo Gateway após validar a sessão
-     * (docs/specs/05-nao-funcionais/03-api-gateway.md). Conta inexistente -&gt; 404
+     * CPF do header X-User-CPF, injetado pelo Gateway após validar a sessão.
+     * Conta inexistente -&gt; 404
      * (buscarPorNumero); conta de outro cliente -&gt; 403.
      */
     public Conta buscarEVerificarPosse(String numeroConta, String cpfSolicitante) {
@@ -115,7 +115,7 @@ public class ContaService {
      * saldo desse gerente. Se o máximo de contas entre os candidatos for
      * menor que 2, ninguém é escolhido — transferir tiraria a única conta de
      * alguém, e "a inserção nunca deixa um gerente existente com 0 contas"
-     * (docs/specs/02-requisitos-funcionais.md, R13). `cpfsGerentesAtivos` já
+     * (R13). `cpfsGerentesAtivos` já
      * exclui o gerente recém-criado (que começa sem contas mesmo).
      */
     public Optional<Conta> identificarContaParaTransferir(List<String> cpfsGerentesAtivos) {
@@ -159,7 +159,7 @@ public class ContaService {
     /**
      * SAGA Remover Gerente (R15, passo 5) — transfere TODAS as contas do
      * gerente removido pro gerente ativo com MENOS contas no momento
-     * (docs/specs/02-requisitos-funcionais.md, R15). `cpfsGerentesAtivos` já
+     * (R15). `cpfsGerentesAtivos` já
      * exclui o removido (o passo 1 já o inativou antes deste passo rodar).
      * Devolve vazio se o gerente removido não tinha nenhuma conta — passo
      * trivial, a SAGA segue em frente sem transferir nada.
@@ -187,6 +187,16 @@ public class ContaService {
         }
 
         return Optional.of(new TransferenciaDeContas(cpfGerenteDestino, numerosConta, cpfsClientes));
+    }
+
+    @Transactional
+    public void reverterTransferenciaDoGerente(List<String> numerosConta, String cpfGerenteDestino, String cpfGerenteOrigem) {
+        for (String numeroConta : numerosConta) {
+            Conta conta = buscarPorNumero(numeroConta);
+            if (cpfGerenteDestino.equals(conta.getCpfGerente())) {
+                atribuirGerente(numeroConta, cpfGerenteOrigem);
+            }
+        }
     }
 
     public record TransferenciaDeContas(String cpfGerenteDestino, List<String> numerosConta, List<String> cpfsClientes) {

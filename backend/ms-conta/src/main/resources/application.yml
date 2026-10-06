@@ -12,7 +12,7 @@ spring:
     open-in-view: false
     show-sql: false
     hibernate:
-      # DDL e schema sao gerenciados pelos scripts em db/ (ver docs/design/modelagem-ct.md),
+      # DDL e schema sao gerenciados pelos scripts em db/,
       # nunca pelo Hibernate. `validate` apenas confirma na subida que as entidades
       # batem com as tabelas reais (command + query side).
       ddl-auto: validate
@@ -29,8 +29,7 @@ spring:
     listener:
       simple:
         # RabbitMQ entrega at-least-once; consumidor idempotente (ver
-        # ProjecaoContaListener). 3 tentativas / 5s, depois vai para a DLQ
-        # (docs/specs/05-nao-funcionais/07-rabbitmq-filas.md).
+        # ProjecaoContaListener). 3 tentativas / 5s, depois vai para a DLQ.
         default-requeue-rejected: false
         retry:
           enabled: true
