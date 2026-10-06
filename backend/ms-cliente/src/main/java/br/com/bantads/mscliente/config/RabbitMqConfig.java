@@ -13,6 +13,8 @@ import org.springframework.context.annotation.Configuration;
  * SAGA Aprovar Cliente (R9, S6) — redeclara `ms.cliente.cmd`/`orquestrador.reply`
  * com os mesmos argumentos que o Orquestrador (dono das filas) já declara,
  * para este serviço não depender da ordem de subida (docs/specs/05-nao-funcionais/07-rabbitmq-filas.md).
+ * `ms.email.cmd` entrou na Semana 08 — R10 publica direto aqui (síncrono,
+ * fora de SAGA, sem sagaId — ver ComandoSaga/SolicitacaoController).
  */
 @Configuration
 public class RabbitMqConfig {
@@ -20,6 +22,7 @@ public class RabbitMqConfig {
     public static final String FILA_COMANDO = "ms.cliente.cmd";
     public static final String FILA_COMANDO_DLQ = "ms.cliente.cmd.dlq";
     public static final String FILA_RESPOSTA = "orquestrador.reply";
+    public static final String FILA_EMAIL = "ms.email.cmd";
 
     @Bean
     public Queue filaComando() {
@@ -32,6 +35,11 @@ public class RabbitMqConfig {
     @Bean
     public Queue filaResposta() {
         return QueueBuilder.durable(FILA_RESPOSTA).build();
+    }
+
+    @Bean
+    public Queue filaEmail() {
+        return QueueBuilder.durable(FILA_EMAIL).build();
     }
 
     @Bean

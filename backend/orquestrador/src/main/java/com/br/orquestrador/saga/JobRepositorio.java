@@ -44,6 +44,19 @@ public class JobRepositorio {
         salvar(jobId, job);
     }
 
+    /** SAGA Remover Gerente (R15) — resultType "inline" é uma mensagem, não um recurso pra buscar. */
+    public void marcarConcluidoInline(String jobId, Map<String, Object> resultado) {
+        Map<String, Object> job = new LinkedHashMap<>();
+        job.put("jobId", jobId);
+        job.put("status", "CONCLUIDO");
+        job.put("resultType", "inline");
+        job.put("dominio", null);
+        job.put("resourceId", null);
+        job.put("erro", null);
+        job.put("resultado", resultado);
+        salvar(jobId, job);
+    }
+
     public void marcarFalha(String jobId, String erro) {
         Map<String, Object> job = new LinkedHashMap<>();
         job.put("jobId", jobId);

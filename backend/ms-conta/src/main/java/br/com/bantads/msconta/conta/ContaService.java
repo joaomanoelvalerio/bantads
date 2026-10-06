@@ -6,6 +6,7 @@ import br.com.bantads.msconta.evento.TipoEvento;
 import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -153,6 +154,42 @@ public class ContaService {
         Conta conta = buscarPorNumero(numeroConta);
         conta.setCpfGerente(cpfGerenteNovo);
         contaRepository.save(conta);
+    }
+
+    /**
+     * SAGA Remover Gerente (R15, passo 5) — transfere TODAS as contas do
+     * gerente removido pro gerente ativo com MENOS contas no momento
+     * (docs/specs/02-requisitos-funcionais.md, R15). `cpfsGerentesAtivos` já
+     * exclui o removido (o passo 1 já o inativou antes deste passo rodar).
+     * Devolve vazio se o gerente removido não tinha nenhuma conta — passo
+     * trivial, a SAGA segue em frente sem transferir nada.
+     */
+    @Transactional
+    public Optional<TransferenciaDeContas> transferirTodasDoGerente(String cpfGerenteOrigem, List<String> cpfsGerentesAtivos) {
+        List<Conta> contasDoGerente = contaRepository.findByCpfGerente(cpfGerenteOrigem);
+        if (contasDoGerente.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Map<String, List<Conta>> porGerente = contaRepository.findByCpfGerenteIn(cpfsGerentesAtivos).stream()
+                .collect(Collectors.groupingBy(Conta::getCpfGerente));
+
+        String cpfGerenteDestino = cpfsGerentesAtivos.stream()
+                .min(Comparator.comparingInt(cpf -> porGerente.getOrDefault(cpf, List.of()).size()))
+                .orElseThrow(() -> new IllegalStateException("Nenhum gerente ativo candidato a receber as contas"));
+
+        List<String> numerosConta = new ArrayList<>();
+        List<String> cpfsClientes = new ArrayList<>();
+        for (Conta conta : contasDoGerente) {
+            atribuirGerente(conta.getNumeroConta(), cpfGerenteDestino);
+            numerosConta.add(conta.getNumeroConta());
+            cpfsClientes.add(conta.getCpfCliente());
+        }
+
+        return Optional.of(new TransferenciaDeContas(cpfGerenteDestino, numerosConta, cpfsClientes));
+    }
+
+    public record TransferenciaDeContas(String cpfGerenteDestino, List<String> numerosConta, List<String> cpfsClientes) {
     }
 
     private String sortearNumeroUnico() {

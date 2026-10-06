@@ -1,0 +1,41 @@
+package br.com.bantads.msgerente.saga;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import java.time.OffsetDateTime;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+/**
+ * Idempotência por (sagaId, tipo) — docs/specs/05-nao-funcionais/07-rabbitmq-filas.md,
+ * S8. Guarda só `gerente.inserir` — reentrega at-least-once não pode criar
+ * um segundo gerente; os demais comandos deste serviço já são idempotentes
+ * por construção.
+ */
+@Entity
+@Table(schema = "ms_gerente", name = "comandos_processados")
+@Getter
+@Setter
+@NoArgsConstructor
+public class ComandoProcessado {
+
+    @EmbeddedId
+    private ComandoProcessadoId id;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    private String resposta;
+
+    @Column(name = "processado_em")
+    private OffsetDateTime processadoEm;
+
+    public ComandoProcessado(String sagaId, String tipo, String resposta) {
+        this.id = new ComandoProcessadoId(sagaId, tipo);
+        this.resposta = resposta;
+        this.processadoEm = OffsetDateTime.now();
+    }
+}

@@ -62,6 +62,23 @@ public class SolicitacaoService {
     }
 
     /**
+     * R10 — Rejeitar Cliente: operação síncrona, direto sobre a Pendente (ao
+     * contrário de R9, não passa pelo Orquestrador). Devolve a solicitação
+     * atualizada pro controller publicar o e-mail fire-and-forget com o
+     * motivo (docs/specs/02-requisitos-funcionais.md).
+     */
+    public Optional<Solicitacao> rejeitarPendente(String cpf, String motivo) {
+        Optional<Solicitacao> pendente = solicitacaoRepository.findFirstByCpfAndStatus(cpf, StatusSolicitacao.PENDENTE);
+        pendente.ifPresent(solicitacao -> {
+            solicitacao.setStatus(StatusSolicitacao.NAO_APROVADO);
+            solicitacao.setMotivo(motivo);
+            solicitacao.setDecididoEm(OffsetDateTime.now());
+            solicitacaoRepository.save(solicitacao);
+        });
+        return pendente;
+    }
+
+    /**
      * R1 — Autocadastro: grava a solicitação como Pendente e retorna (operação
      * síncrona; a aprovação é feita depois pelo gerente — R9). Unicidade de CPF
      * e e-mail entre solicitações "ativas" (Pendente/Aprovado) é garantida por

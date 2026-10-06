@@ -35,4 +35,32 @@ public class GerenteService {
         gerente.setTelefone(telefone);
         return gerenteRepository.save(gerente);
     }
+
+    /**
+     * SAGA Remover Gerente (R15, passo 1). Idempotente: se já está inativo
+     * (reentrega do comando), não faz nada — em particular, não refaz a
+     * checagem de "último ativo", que já não contaria mais com este CPF e
+     * daria falso positivo. "Não é permitido remover o último gerente
+     * ativo" (docs/specs/02-requisitos-funcionais.md, R15) só se aplica à
+     * transição ativo → inativo de verdade.
+     */
+    public void inativar(String cpf) {
+        Gerente gerente = buscarPorCpf(cpf);
+        if (!gerente.isAtivo()) {
+            return;
+        }
+        if (gerenteRepository.countByAtivoTrue() <= 1) {
+            throw new UltimoGerenteAtivoException();
+        }
+        gerente.setAtivo(false);
+        gerenteRepository.save(gerente);
+    }
+
+    /** Compensação do passo 1 — idempotente: gerente inexistente não é erro. */
+    public void reativar(String cpf) {
+        gerenteRepository.findById(cpf).ifPresent(gerente -> {
+            gerente.setAtivo(true);
+            gerenteRepository.save(gerente);
+        });
+    }
 }

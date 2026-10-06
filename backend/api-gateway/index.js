@@ -119,10 +119,12 @@ function proxyPara(caminho, destino) {
 const ROTAS_SOMENTE_GERENTE = [
   { metodo: "GET", padrao: /^\/solicitacoes\/?$/ }, // R8
   { metodo: "POST", padrao: /^\/solicitacoes\/[^/]+\/aprovar$/ }, // R9
+  { metodo: "POST", padrao: /^\/solicitacoes\/[^/]+\/rejeitar$/ }, // R10
   { metodo: "GET", padrao: /^\/clientes\/?$/ }, // R11
   { metodo: "GET", padrao: /^\/gerentes\/?$/ }, // R12
   { metodo: "POST", padrao: /^\/gerentes\/?$/ }, // R13
   { metodo: "PUT", padrao: /^\/gerentes\/[^/]+$/ }, // R14
+  { metodo: "DELETE", padrao: /^\/gerentes\/[^/]+$/ }, // R15
   { metodo: "GET", padrao: /^\/relatorios\/clientes$/ }, // R16
 ];
 
@@ -287,6 +289,29 @@ app.post("/gerentes", express.json(), async (req, res) => {
   } catch (erro) {
     console.error("Falha ao iniciar a SAGA de inserção de gerente:", erro.message);
     res.status(502).json({ message: "Falha ao iniciar a inserção do gerente." });
+  }
+});
+
+// R15 — Remover Gerente [SAGA]: mesmo padrão 202+job de R9/R13, mas com uma
+// pré-condição síncrona antes de publicar em saga.cmd — um gerente não pode
+// remover a si mesmo (docs/specs/05-nao-funcionais/09-sagas-api-compositions.md,
+// SAGA 3). A regra do último gerente ativo NÃO é checada aqui: depende do
+// estado real no MS Gerente no momento da SAGA, então vem como FALHA do job.
+app.delete("/gerentes/:cpf", async (req, res) => {
+  const { cpf } = req.params;
+
+  if (req.usuario.cpf === cpf) {
+    return res.status(403).json({ message: "Não é possível remover o próprio cadastro de gerente." });
+  }
+
+  const jobId = crypto.randomUUID();
+  try {
+    await jobs.criarJobPendente(jobId, "gerentes", cpf);
+    await publicarComandoSaga("saga.cmd", jobId, "remover-gerente", { cpf });
+    res.status(202).json({ jobId });
+  } catch (erro) {
+    console.error("Falha ao iniciar a SAGA de remoção de gerente:", erro.message);
+    res.status(502).json({ message: "Falha ao iniciar a remoção." });
   }
 });
 

@@ -85,3 +85,19 @@ COMMENT ON TABLE ms_conta.movimentacoes IS
     'pois o MS Conta não conhece nomes de clientes. Uma transferência gera uma '
     'linha em cada conta (origem e destino); o front decide a cor '
     '(vermelho/azul) comparando numero_conta ao lado origem/destino da linha.';
+
+-- ---------------------------------------------------------------------------
+-- Idempotência de comandos de SAGA (S8) — docs/specs/05-nao-funcionais/07-rabbitmq-filas.md:
+-- "deduplicar pelo par (sagaId, tipo)". Só guarda os comandos que CRIAM algo
+-- (conta.criar) — reentrega at-least-once não pode criar uma segunda conta;
+-- os demais comandos deste serviço já são idempotentes por construção
+-- (checam o estado atual antes de agir).
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE ms_conta.comandos_processados (
+    saga_id       VARCHAR(100)  NOT NULL,
+    tipo          VARCHAR(100)  NOT NULL,
+    resposta      JSONB         NOT NULL,
+    processado_em TIMESTAMPTZ   NOT NULL DEFAULT now(),
+    PRIMARY KEY (saga_id, tipo)
+);

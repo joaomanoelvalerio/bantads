@@ -13,4 +13,7 @@ public interface ContaRepository extends JpaRepository<Conta, String> {
 
     /** SAGA Inserir Gerente (R13, passo 3) — candidatos a doar uma conta ao gerente novo. */
     List<Conta> findByCpfGerenteIn(List<String> cpfsGerente);
+
+    /** SAGA Remover Gerente (R15, passo 5) — todas as contas do gerente removido. */
+    List<Conta> findByCpfGerente(String cpfGerente);
 }

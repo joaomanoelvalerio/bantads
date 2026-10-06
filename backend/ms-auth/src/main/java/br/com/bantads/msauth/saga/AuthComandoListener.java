@@ -7,6 +7,7 @@ import br.com.bantads.msauth.usuario.UsuarioRepository;
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
 import java.util.Map;
+import org.springframework.dao.DuplicateKeyException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -31,6 +32,8 @@ public class AuthComandoListener {
 
     private static final String TIPO_CRIAR = "auth.criar-credencial";
     private static final String TIPO_REMOVER = "auth.remover-credencial";
+    private static final String TIPO_DESATIVAR = "auth.desativar-credencial";
+    private static final String TIPO_REATIVAR = "auth.reativar-credencial";
 
     /** Sem caracteres ambíguos (0/O, 1/l/I) — a senha vai por e-mail, não é digitada na hora. */
     private static final String ALFABETO_SENHA = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
@@ -38,13 +41,18 @@ public class AuthComandoListener {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ComandoProcessadoRepository comandoProcessadoRepository;
     private final RabbitTemplate rabbitTemplate;
     private final SecureRandom aleatorio = new SecureRandom();
 
     public AuthComandoListener(
-            UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, RabbitTemplate rabbitTemplate) {
+            UsuarioRepository usuarioRepository,
+            PasswordEncoder passwordEncoder,
+            ComandoProcessadoRepository comandoProcessadoRepository,
+            RabbitTemplate rabbitTemplate) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
+        this.comandoProcessadoRepository = comandoProcessadoRepository;
         this.rabbitTemplate = rabbitTemplate;
     }
 
@@ -55,6 +63,8 @@ public class AuthComandoListener {
         switch (comando.getTipo()) {
             case TIPO_CRIAR -> criarCredencial(comando);
             case TIPO_REMOVER -> removerCredencial(comando);
+            case TIPO_DESATIVAR -> desativarCredencial(comando);
+            case TIPO_REATIVAR -> reativarCredencial(comando);
             default -> {
                 log.warn("Tipo de comando desconhecido em ms.auth.cmd: {}", comando.getTipo());
                 responder(comando, "FALHA", null, "Tipo de comando desconhecido: " + comando.getTipo());
@@ -62,7 +72,23 @@ public class AuthComandoListener {
         }
     }
 
+    /**
+     * Idempotência por (sagaId, tipo) — docs/specs/05-nao-funcionais/07-rabbitmq-filas.md,
+     * S8. Sem o marcador, uma reentrega bateria no `login` já criado pela
+     * primeira tentativa e pareceria um "login_duplicado" de verdade — o
+     * caso especial de R9 que marca a solicitação como Não aprovada, quando
+     * na real a credencial já tinha sido criada com sucesso. O marcador de
+     * idempotência NUNCA guarda a senha em claro (só confirma que esta saga
+     * já passou por aqui) — ela só existe na resposta publicada em
+     * `orquestrador.reply`, nunca em disco (ver Javadoc da classe).
+     */
     private void criarCredencial(ComandoSaga comando) {
+        if (comandoProcessadoRepository.findBySagaIdAndTipo(comando.getSagaId(), comando.getTipo()).isPresent()) {
+            log.info("auth.criar-credencial já processado antes para a saga {} — confirmando sucesso de novo (sem repetir a senha)", comando.getSagaId());
+            responder(comando, "SUCESSO", null, null);
+            return;
+        }
+
         String cpf = String.valueOf(comando.getPayload().get("cpf"));
         String login = String.valueOf(comando.getPayload().get("login"));
         String tipoBruto = String.valueOf(comando.getPayload().get("tipo"));
@@ -88,6 +114,7 @@ public class AuthComandoListener {
             usuario.setSenha(passwordEncoder.encode(senhaEmClaro));
             usuario.setAtivo(true);
             usuarioRepository.save(usuario);
+            salvarComandoProcessado(comando);
 
             // R13 não precisa da senha de volta (já veio do formulário, não vai por e-mail).
             Map<String, Object> resposta = senhaVeioDoFormulario ? null : Map.of("senha", senhaEmClaro);
@@ -95,6 +122,14 @@ public class AuthComandoListener {
         } catch (Exception e) {
             log.error("Falha ao criar credencial para a saga {}", comando.getSagaId(), e);
             responder(comando, "FALHA", null, "Falha ao criar credencial: " + e.getMessage());
+        }
+    }
+
+    private void salvarComandoProcessado(ComandoSaga comando) {
+        try {
+            comandoProcessadoRepository.save(new ComandoProcessado(comando.getSagaId(), comando.getTipo(), Map.of()));
+        } catch (DuplicateKeyException e) {
+            log.warn("Corrida ao salvar o registro de idempotência da saga {} — outra entrega venceu", comando.getSagaId());
         }
     }
 
@@ -107,6 +142,36 @@ public class AuthComandoListener {
         } catch (Exception e) {
             log.error("Falha ao remover credencial (compensação) para a saga {}", comando.getSagaId(), e);
             responder(comando, "FALHA", null, "Falha ao remover credencial: " + e.getMessage());
+        }
+    }
+
+    /** SAGA Remover Gerente (R15, passo 2). */
+    private void desativarCredencial(ComandoSaga comando) {
+        String cpf = String.valueOf(comando.getPayload().get("cpf"));
+        try {
+            usuarioRepository.findByCpf(cpf).ifPresent(usuario -> {
+                usuario.setAtivo(false);
+                usuarioRepository.save(usuario);
+            });
+            responder(comando, "SUCESSO", null, null);
+        } catch (Exception e) {
+            log.error("Falha ao desativar credencial para a saga {}", comando.getSagaId(), e);
+            responder(comando, "FALHA", null, "Falha ao desativar credencial: " + e.getMessage());
+        }
+    }
+
+    /** Compensação do passo 2 — idempotente: credencial inexistente não é erro. */
+    private void reativarCredencial(ComandoSaga comando) {
+        String cpf = String.valueOf(comando.getPayload().get("cpf"));
+        try {
+            usuarioRepository.findByCpf(cpf).ifPresent(usuario -> {
+                usuario.setAtivo(true);
+                usuarioRepository.save(usuario);
+            });
+            responder(comando, "SUCESSO", null, null);
+        } catch (Exception e) {
+            log.error("Falha ao reativar credencial (compensação) na saga {}", comando.getSagaId(), e);
+            responder(comando, "FALHA", null, "Falha ao reativar credencial: " + e.getMessage());
         }
     }
 
