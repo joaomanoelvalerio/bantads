@@ -3,7 +3,7 @@ package br.com.bantads.msauth.usuario;
 /**
  * Resposta de POST /auth/login bem-sucedido. Só cpf/tipo — o Gateway é quem
  * compõe nome/e-mail consultando MS Cliente/Gerente
- * (docs/specs/05-nao-funcionais/04-autenticacao.md, "Login é uma API Composition").
+ * ("Login é uma API Composition").
  */
 public record IdentidadeResponse(String cpf, TipoUsuario tipo) {
 }

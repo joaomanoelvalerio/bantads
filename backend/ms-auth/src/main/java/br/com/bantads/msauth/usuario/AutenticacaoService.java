@@ -6,8 +6,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * Valida credenciais (login/senha). Não gera token nem acessa Redis — isso é
- * responsabilidade exclusiva do Gateway
- * (docs/specs/05-nao-funcionais/04-autenticacao.md).
+ * responsabilidade exclusiva do Gateway.
  */
 @Service
 public class AutenticacaoService {

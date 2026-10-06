@@ -6,7 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 /**
- * Popula os 9 usuários pré-cadastrados (docs/specs/05-dados-pre-cadastrados.md)
+ * Popula os 9 usuários pré-cadastrados
  * na primeira subida — só se a coleção estiver vazia (idempotente entre
  * reinicializações, análogo aos scripts de init do Postgres, mas em código:
  * MongoDB não tem um mecanismo de init script equivalente para rodar Java).
@@ -29,7 +29,10 @@ public class SeedRunner implements CommandLineRunner {
         if (usuarioRepository.count() > 0) {
             return;
         }
+        popular();
+    }
 
+    public int popular() {
         String senhaHash = passwordEncoder.encode("tads");
 
         List<Usuario> usuarios = List.of(
@@ -44,6 +47,7 @@ public class SeedRunner implements CommandLineRunner {
                 novoUsuario("40501740066", "ger4@bantads.com.br", TipoUsuario.GERENTE, senhaHash));
 
         usuarioRepository.saveAll(usuarios);
+        return usuarios.size();
     }
 
     private Usuario novoUsuario(String cpf, String login, TipoUsuario tipo, String senhaHash) {

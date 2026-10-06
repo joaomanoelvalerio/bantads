@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Interno — só o Gateway chama isto (docs/specs/05-nao-funcionais/04-autenticacao.md). */
+/** Interno — só o Gateway chama isto. */
 @RestController
 @RequestMapping("/auth")
 public class AutenticacaoController {
