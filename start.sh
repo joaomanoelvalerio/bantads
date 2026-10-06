@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Builda a imagem Docker de cada microsserviço e sobe a frota inteira via
-# docker-compose (Semana 02 do cronograma — docs/specs/10-cronograma.md).
+# docker-compose (Semana 02 do cronograma).
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
 

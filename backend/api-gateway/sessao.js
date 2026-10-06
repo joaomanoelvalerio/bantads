@@ -1,4 +1,4 @@
-// Sessão de login (docs/specs/05-nao-funcionais/04-autenticacao.md): quem
+// Sessão de login: quem
 // assina o JWT é o Gateway (a chave secreta só existe aqui); a sessão em si
 // vive no Redis, não no token — permite revogar (logout) e expirar por
 // inatividade (sliding window) sem esperar o `exp` absoluto do JWT.
@@ -32,7 +32,7 @@ async function criarSessao(cpf, tipo) {
 /**
  * Verifica assinatura + exp do JWT e a existência da sessão no Redis (não
  * revogada); renova o TTL da sessão a cada requisição (sliding window) —
- * pipeline de docs/specs/05-nao-funcionais/03-api-gateway.md.
+ * pipeline do Gateway.
  * Retorna { cpf, tipo, jti } se válido, ou null.
  */
 async function validarToken(token) {

@@ -1,4 +1,4 @@
-// Jobs assíncronos no Redis (docs/specs/05-nao-funcionais/08-jobs-assincronos.md).
+// Jobs assíncronos no Redis.
 // Chave `job:<jobId>`, TTL 5 min. Para SAGAs (R9/R13/R15) o jobId é o
 // próprio sagaId — o Orquestrador reescreve esta mesma chave com o desfecho
 // (CONCLUIDO/FALHA); aqui só se cria o PENDENTE inicial e se lê o estado.
@@ -20,7 +20,7 @@ async function buscarJob(jobId) {
 /**
  * R16 — o relatório não é SAGA, é uma API Composition simples que o próprio
  * Gateway resolve na hora; mesmo assim o contrato pede o padrão 202+job
- * (docs/specs/05-nao-funcionais/08-jobs-assincronos.md — "em sistemas reais,
+ * ("em sistemas reais,
  * com grande volume, esse tipo de relatório costuma ser assíncrono"), então
  * o job já nasce CONCLUIDO em vez de PENDENTE seguido de uma atualização.
  */

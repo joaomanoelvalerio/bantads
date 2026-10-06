@@ -1,4 +1,4 @@
-// Publicação de comandos de SAGA (docs/specs/05-nao-funcionais/07-rabbitmq-filas.md).
+// Publicação de comandos de SAGA.
 // O Gateway só publica em `saga.cmd` e retorna 202 — quem executa os passos é
 // o Orquestrador; a resposta final chega pelo job no Redis (jobs.js), não por
 // aqui.
