@@ -7,8 +7,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * SAGA Remover Gerente (R15, passo 3) — "apaga no Redis a sessão do gerente
- * removido (DEL em sessao:cpf:&lt;cpf&gt; e sessao:&lt;jti&gt;), logout forçado"
- * (docs/specs/05-nao-funcionais/09-sagas-api-compositions.md). Sem
+ * removido (DEL em sessao:cpf:&lt;cpf&gt; e sessao:&lt;jti&gt;), logout forçado".
+ * Sem
  * compensação (a própria spec diz: "se a SAGA falhar, o gerente reativado
  * faz novo login") e sem RabbitMQ — é a mesma instância de Redis que o
  * Gateway usa pra sessão (`backend/api-gateway/sessao.js`), acessada direto

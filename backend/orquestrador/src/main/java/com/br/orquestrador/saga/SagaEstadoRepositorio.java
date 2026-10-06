@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Estado da SAGA no Redis (docs/specs/05-nao-funcionais/05-redis.md), chave
+ * Estado da SAGA no Redis, chave
  * `saga:&lt;sagaId&gt;`, TTL 1h. Só para acompanhamento/depuração (ex.: console
  * do RabbitMQ + Redis na defesa) — quem decide o fluxo é o código Java, não
  * uma releitura deste estado. O `payload` gravado aqui nunca inclui dados

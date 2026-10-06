@@ -19,8 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
- * SAGA 3 — Remoção de Gerente (R15),
- * docs/specs/05-nao-funcionais/09-sagas-api-compositions.md. Mesmo desenho
+ * SAGA 3 — Remoção de Gerente (R15). Mesmo desenho
  * sequencial/bloqueante das outras duas SAGAs (ver Javadoc de
  * {@code AprovarClienteSagaService}). O passo 3 (logout forçado) não usa
  * RabbitMQ — é acesso direto ao Redis, sem compensação por desenho: "se a
@@ -63,6 +62,7 @@ public class RemoverGerenteSagaService {
                 QUEUE_MS_GERENTE_CMD, sagaId, "gerente.inativar", Map.of("cpf", cpf), TIMEOUT_PASSO);
         if (!r1.sucesso()) {
             log.warn("SAGA {} falhou no passo 1 (inativar gerente): {}", sagaId, r1.getErro());
+            compensarPasso1(sagaId, cpf);
             estado(sagaId, 1, "FALHA", cpf);
             jobRepositorio.marcarFalha(sagaId, mensagem(r1, "Não foi possível inativar o gerente"));
             return;
@@ -74,6 +74,7 @@ public class RemoverGerenteSagaService {
                 QUEUE_MS_AUTH_CMD, sagaId, "auth.desativar-credencial", Map.of("cpf", cpf), TIMEOUT_PASSO);
         if (!r2.sucesso()) {
             log.warn("SAGA {} falhou no passo 2 (desativar credencial): {}", sagaId, r2.getErro());
+            compensarPasso2(sagaId, cpf);
             compensarPasso1(sagaId, cpf);
             estado(sagaId, 2, "FALHA", cpf);
             jobRepositorio.marcarFalha(sagaId, mensagem(r2, "Não foi possível desativar a credencial"));
@@ -110,6 +111,7 @@ public class RemoverGerenteSagaService {
                 Map.of("cpfGerenteOrigem", cpf, "gerentesAtivos", cpfsGerentesAtivos), TIMEOUT_PASSO);
         if (!r5.sucesso()) {
             log.warn("SAGA {} falhou no passo 5 (transferir contas): {}", sagaId, r5.getErro());
+            compensarPasso5(sagaId, cpf);
             compensarPasso2(sagaId, cpf);
             compensarPasso1(sagaId, cpf);
             estado(sagaId, 5, "FALHA", cpf);
@@ -159,6 +161,12 @@ public class RemoverGerenteSagaService {
                         + " conta(s) transferida(s) para " + nomeGerenteDestino + "."));
         log.info("SAGA {} concluída com sucesso para o cpf {} ({} conta(s) transferida(s) para {})",
                 sagaId, cpf, numerosConta.size(), cpfGerenteDestino);
+    }
+
+    private void compensarPasso5(String sagaId, String cpf) {
+        publicador.enviarEAguardar(
+                QUEUE_MS_CONTA_CMD, sagaId, "conta.reverter-transferencia-do-gerente",
+                Map.of("cpfGerenteOrigem", cpf), TIMEOUT_PASSO);
     }
 
     private void compensarPasso1(String sagaId, String cpf) {

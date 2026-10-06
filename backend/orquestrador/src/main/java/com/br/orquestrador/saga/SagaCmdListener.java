@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Ponto de entrada de toda SAGA — o Gateway publica aqui e retorna 202
- * imediatamente (docs/specs/05-nao-funcionais/09-sagas-api-compositions.md).
+ * imediatamente.
  * As três SAGAs do enunciado existem: Aprovar Cliente (R9, S6), Inserir
  * Gerente (R13, S7) e Remover Gerente (R15, S8).
  */
@@ -27,16 +27,19 @@ public class SagaCmdListener {
     private final InserirGerenteSagaService inserirGerenteSagaService;
     private final RemoverGerenteSagaService removerGerenteSagaService;
     private final JobRepositorio jobRepositorio;
+    private final CacheCadastralInvalidador cacheCadastralInvalidador;
 
     public SagaCmdListener(
             AprovarClienteSagaService aprovarClienteSagaService,
             InserirGerenteSagaService inserirGerenteSagaService,
             RemoverGerenteSagaService removerGerenteSagaService,
-            JobRepositorio jobRepositorio) {
+            JobRepositorio jobRepositorio,
+            CacheCadastralInvalidador cacheCadastralInvalidador) {
         this.aprovarClienteSagaService = aprovarClienteSagaService;
         this.inserirGerenteSagaService = inserirGerenteSagaService;
         this.removerGerenteSagaService = removerGerenteSagaService;
         this.jobRepositorio = jobRepositorio;
+        this.cacheCadastralInvalidador = cacheCadastralInvalidador;
     }
 
     @RabbitListener(queues = OrquestradorApplication.QUEUE_SAGA_CMD)
@@ -58,6 +61,20 @@ public class SagaCmdListener {
         } catch (Exception e) {
             log.error("Falha inesperada executando a SAGA {} ({})", comando.getTipo(), comando.getSagaId(), e);
             jobRepositorio.marcarFalha(comando.getSagaId(), "Falha inesperada ao processar a operação: " + e.getMessage());
+        } finally {
+            invalidarCacheCadastral(comando);
+        }
+    }
+
+    private void invalidarCacheCadastral(ComandoSaga comando) {
+        Object cpf = comando.getPayload() == null ? null : comando.getPayload().get("cpf");
+        if (cpf == null) {
+            return;
+        }
+        switch (comando.getTipo()) {
+            case TIPO_APROVAR_CLIENTE -> cacheCadastralInvalidador.invalidarCliente(String.valueOf(cpf));
+            case TIPO_INSERIR_GERENTE, TIPO_REMOVER_GERENTE -> cacheCadastralInvalidador.invalidarGerente(String.valueOf(cpf));
+            default -> { }
         }
     }
 }
