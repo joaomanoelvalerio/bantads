@@ -9,7 +9,7 @@ import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
- * Idempotência por (sagaId, tipo) — docs/specs/05-nao-funcionais/07-rabbitmq-filas.md,
+ * Idempotência por (sagaId, tipo),
  * S8. Guarda só `auth.criar-credencial` — reentrega at-least-once não pode
  * criar uma segunda credencial (e geraria uma senha ALEATÓRIA diferente da
  * primeira, pior ainda); os demais comandos deste serviço já são

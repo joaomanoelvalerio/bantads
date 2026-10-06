@@ -1,4 +1,4 @@
-// Conexão com o RabbitMQ (docs/specs/05-nao-funcionais/07-rabbitmq-filas.md).
+// Conexão com o RabbitMQ.
 // Semana 02: só estabelece a conexão; publicar em `saga.cmd` (Semana 06) vai
 // reusar o canal daqui.
 const amqp = require("amqplib");

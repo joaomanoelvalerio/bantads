@@ -7,7 +7,7 @@ const extrato: Extrato = {
   movimentacoes: [
     {
       dataHora: '2020-01-20T12:00:00',
-      tipo: 'TRANSFERENCIA',
+      tipo: 'transferência',
       cpfOrigem: '12912861012',
       nomeOrigem: 'Catharyna',
       cpfDestino: '09506382000',
@@ -49,7 +49,7 @@ describe('linha do tempo do extrato', () => {
   it('agrupa pelo fuso de Sao Paulo, nao pelo do navegador', () => {
     const noturno: Extrato = {
       saldoAbertura: '0.0000',
-      movimentacoes: [{ dataHora: '2020-01-11T02:30:00Z', tipo: 'DEPOSITO', valor: '50.0000' }],
+      movimentacoes: [{ dataHora: '2020-01-11T02:30:00Z', tipo: 'depósito', valor: '50.0000' }],
     };
     const dias = montarLinhaDoTempo(
       noturno,
@@ -63,8 +63,8 @@ describe('linha do tempo do extrato', () => {
   });
 
   it('classifica saque como saida e deposito como entrada', () => {
-    expect(sentidoDe({ dataHora: '', tipo: 'SAQUE', valor: '1' }, '12912861012')).toBe('SAIDA');
-    expect(sentidoDe({ dataHora: '', tipo: 'DEPOSITO', valor: '1' }, '12912861012')).toBe(
+    expect(sentidoDe({ dataHora: '', tipo: 'saque', valor: '1' }, '12912861012')).toBe('SAIDA');
+    expect(sentidoDe({ dataHora: '', tipo: 'depósito', valor: '1' }, '12912861012')).toBe(
       'ENTRADA',
     );
   });

@@ -19,8 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
- * SAGA 1 — Aprovar Cliente (R9), os 7 passos de
- * docs/specs/05-nao-funcionais/09-sagas-api-compositions.md. Roda inteira na
+ * SAGA 1 — Aprovar Cliente (R9), os 7 passos do enunciado. Roda inteira na
  * thread do listener de `saga.cmd` (uma SAGA de cada vez, sequencial) — mais
  * simples que um motor assíncrono de verdade, e suficiente pro volume de um
  * projeto de curso; documentado aqui em vez de escondido.
@@ -57,9 +56,8 @@ public class AprovarClienteSagaService {
         RespostaSaga r1 = publicador.enviarEAguardar(
                 QUEUE_MS_CLIENTE_CMD, sagaId, "cliente.aprovar-solicitacao", Map.of("cpf", cpf), TIMEOUT_PASSO);
         if (!r1.sucesso()) {
-            // Nada foi de fato aprovado ainda — sem compensação, e sem e-mail
-            // (nem sabemos pra quem mandar: a solicitação não foi encontrada).
             log.warn("SAGA {} falhou no passo 1 (aprovar solicitação): {}", sagaId, r1.getErro());
+            compensarPasso1(sagaId, cpf);
             estado(sagaId, 1, "FALHA", cpf);
             jobRepositorio.marcarFalha(sagaId, mensagem(r1, "Não foi possível aprovar a solicitação"));
             return;
@@ -98,6 +96,7 @@ public class AprovarClienteSagaService {
                 QUEUE_MS_CLIENTE_CMD, sagaId, "cliente.criar", new LinkedHashMap<>(dadosSolicitacao), TIMEOUT_PASSO);
         if (!r4.sucesso()) {
             log.warn("SAGA {} falhou no passo 4 (criar cliente): {}", sagaId, r4.getErro());
+            compensarPasso4(sagaId, cpf);
             compensarPasso1(sagaId, cpf);
             falharComEmail(sagaId, cpf, email, mensagem(r4, "Não foi possível cadastrar o cliente"));
             return;
@@ -111,10 +110,11 @@ public class AprovarClienteSagaService {
         if (!r5.sucesso()) {
             boolean loginDuplicado = r5.getPayload() != null && "login_duplicado".equals(r5.getPayload().get("motivo"));
             log.warn("SAGA {} falhou no passo 5 (criar credencial); loginDuplicado={}", sagaId, loginDuplicado);
+            compensarPasso5(sagaId, cpf);
             compensarPasso4(sagaId, cpf);
             if (loginDuplicado) {
                 // Caso especial: NÃO devolve a Pendente — senão a mesma tentativa
-                // falharia pra sempre (docs/specs/05-nao-funcionais/09-sagas-api-compositions.md).
+                // falharia pra sempre.
                 compensarPasso1ComoNaoAprovada(sagaId, cpf, "E-mail já cadastrado");
             } else {
                 compensarPasso1(sagaId, cpf);
@@ -133,6 +133,7 @@ public class AprovarClienteSagaService {
                 Map.of("cpfCliente", cpf, "cpfGerente", cpfGerenteEscolhido), TIMEOUT_PASSO);
         if (!r6.sucesso()) {
             log.warn("SAGA {} falhou no passo 6 (criar conta): {}", sagaId, r6.getErro());
+            compensarPasso6(sagaId, cpf);
             compensarPasso5(sagaId, cpf);
             compensarPasso4(sagaId, cpf);
             compensarPasso1(sagaId, cpf);
@@ -166,6 +167,10 @@ public class AprovarClienteSagaService {
     private void compensarPasso1ComoNaoAprovada(String sagaId, String cpf, String motivo) {
         publicador.enviarEAguardar(
                 QUEUE_MS_CLIENTE_CMD, sagaId, "cliente.marcar-nao-aprovada", Map.of("cpf", cpf, "motivo", motivo), TIMEOUT_PASSO);
+    }
+
+    private void compensarPasso6(String sagaId, String cpf) {
+        publicador.enviarEAguardar(QUEUE_MS_CONTA_CMD, sagaId, "conta.remover", Map.of("cpfCliente", cpf), TIMEOUT_PASSO);
     }
 
     private void compensarPasso4(String sagaId, String cpf) {

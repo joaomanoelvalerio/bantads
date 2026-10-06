@@ -45,7 +45,7 @@ public class EventoContaAppender {
 
     /**
      * R6 — transferência: os dois eventos (origem e destino) são gravados numa
-     * única transação local (não é SAGA — docs/specs/05-nao-funcionais/10-cqrs.md).
+     * única transação local (não é SAGA).
      * Um conflito de versão em qualquer um dos dois lados derruba a transação
      * inteira; quem chamou (OperacaoContaService) refaz as DUAS tentativas
      * juntas, recalculando as próximas versões de ambas as contas.

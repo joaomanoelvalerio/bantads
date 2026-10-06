@@ -3,8 +3,8 @@ services:
     build: ./backend/api-gateway
     mem_limit: 256m
     ports:
-      # Único serviço exposto ao host — é o ponto único de acesso
-      # (docs/specs/04-arquitetura.md); o front (`environment.apiUrl`,
+      # Único serviço exposto ao host — é o ponto único de acesso;
+      # o front (`environment.apiUrl`,
       # rodando via `ng serve` fora do Docker) espera localhost:3000.
       - "3000:3000"
     env_file:
@@ -38,7 +38,7 @@ services:
     mem_limit: 384m
     ports:
       # Exposto para acesso via DBeaver/psql do host — exigido aberto na
-      # defesa (docs/specs/08-normas-defesa-final.md).
+      # defesa.
       - "5432:5432"
     env_file:
       - .env
@@ -117,6 +117,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    volumes:
+      - ./backend/ms-cliente/db/02-seed.sql:/app/db/02-seed.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9090/health"]
       start_period: 40s
@@ -141,6 +143,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    volumes:
+      - ./backend/ms-gerente/db/02-seed.sql:/app/db/02-seed.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/health"]
       start_period: 40s
@@ -166,6 +170,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    volumes:
+      - ./backend/ms-conta/db/02-seed.sql:/app/db/02-seed.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8081/health"]
       start_period: 40s
@@ -237,8 +243,7 @@ services:
     image: rabbitmq:3-management
     mem_limit: 512m
     ports:
-      # Console de gestão exigido aberto na defesa
-      # (docs/specs/08-normas-defesa-final.md).
+      # Console de gestão exigido aberto na defesa.
       - "15672:15672"
     env_file:
       - .env

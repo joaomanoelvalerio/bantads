@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Sem HATEOAS/_links ainda (entra na S9). R13 (inserção) não tem endpoint
+ * R13 (inserção) não tem endpoint
  * REST aqui — é SAGA, entra só pelo Orquestrador via `ms.gerente.cmd`
  * (ver `saga/GerenteComandoListener`).
  */

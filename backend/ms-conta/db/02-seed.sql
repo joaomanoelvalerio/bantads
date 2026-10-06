@@ -1,4 +1,4 @@
--- Seed do MS Conta — dados pré-cadastrados (docs/specs/05-dados-pre-cadastrados.md).
+-- Seed do MS Conta — dados pré-cadastrados.
 --
 -- Popula os DOIS lados do CQRS de forma consistente: o event store (replay
 -- reproduz exatamente os saldos abaixo) e o read model (projeção equivalente).
@@ -125,15 +125,15 @@ BEGIN
     VALUES ('0950', '2025-03-06 11:00:00-03', 'saque', 4500.0000, v_evt);
 
     -- =========================================================================
-    -- Catianna — conta 8573 — gerente Gyândula (723862179060)
+    -- Catianna — conta 8573 — gerente Gyândula (23862179060)
     -- =========================================================================
     INSERT INTO ms_conta.eventos_conta (objeto_id, tipo, payload, versao, "timestamp")
     VALUES ('8573', 'Criado',
-            '{"cpfCliente":"85733854057","cpfGerente":"723862179060"}'::jsonb,
+            '{"cpfCliente":"85733854057","cpfGerente":"23862179060"}'::jsonb,
             1, '2012-12-12 00:00:00-03');
 
     INSERT INTO ms_conta.contas (numero_conta, cpf_cliente, data_criacao, saldo, cpf_gerente, ultima_versao_aplicada)
-    VALUES ('8573', '85733854057', '2012-12-12', 200.0000, '723862179060', 3);
+    VALUES ('8573', '85733854057', '2012-12-12', 200.0000, '23862179060', 3);
 
     INSERT INTO ms_conta.eventos_conta (objeto_id, tipo, payload, versao, "timestamp")
     VALUES ('8573', 'Depósito', '{"valor":"1000.0000"}'::jsonb, 2, '2025-05-05 10:00:00-03')

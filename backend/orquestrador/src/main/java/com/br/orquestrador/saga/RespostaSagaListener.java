@@ -8,10 +8,10 @@ import org.springframework.stereotype.Component;
 
 /**
  * Consumidor de `orquestrador.reply` — fila única compartilhada por todos os
- * MSs (docs/specs/05-nao-funcionais/07-rabbitmq-filas.md). Só repassa a
+ * MSs. Só repassa a
  * resposta pro publicador casar com quem está esperando; nunca loga
  * `payload` aqui (é onde a senha em claro do passo 5 da SAGA Aprovar Cliente
- * trafega — docs/specs/05-nao-funcionais/09-sagas-api-compositions.md).
+ * trafega).
  */
 @Component
 public class RespostaSagaListener {

@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * SAGA Aprovar Cliente (R9, passos 3/6) e SAGA Inserir Gerente (R13, passos
- * 3/4 + compensação) — docs/specs/05-nao-funcionais/09-sagas-api-compositions.md.
+ * 3/4 + compensação).
  */
 @Component
 public class ContaComandoListener {
@@ -31,6 +31,7 @@ public class ContaComandoListener {
     private static final String TIPO_IDENTIFICAR_TRANSFERENCIA = "conta.identificar-transferencia";
     private static final String TIPO_ATRIBUIR_GERENTE = "conta.atribuir-gerente";
     private static final String TIPO_TRANSFERIR_TODAS_DO_GERENTE = "conta.transferir-todas-do-gerente";
+    private static final String TIPO_REVERTER_TRANSFERENCIA_DO_GERENTE = "conta.reverter-transferencia-do-gerente";
 
     private final ContaService contaService;
     private final ContaRepository contaRepository;
@@ -62,6 +63,7 @@ public class ContaComandoListener {
             case TIPO_IDENTIFICAR_TRANSFERENCIA -> identificarTransferencia(comando);
             case TIPO_ATRIBUIR_GERENTE -> atribuirGerente(comando);
             case TIPO_TRANSFERIR_TODAS_DO_GERENTE -> transferirTodasDoGerente(comando);
+            case TIPO_REVERTER_TRANSFERENCIA_DO_GERENTE -> reverterTransferenciaDoGerente(comando);
             default -> {
                 log.warn("Tipo de comando desconhecido em ms.conta.cmd: {}", comando.getTipo());
                 responder(comando, "FALHA", null, "Tipo de comando desconhecido: " + comando.getTipo());
@@ -89,7 +91,7 @@ public class ContaComandoListener {
     }
 
     /**
-     * Idempotência por (sagaId, tipo) — docs/specs/05-nao-funcionais/07-rabbitmq-filas.md,
+     * Idempotência por (sagaId, tipo),
      * S8. Ao contrário dos outros comandos deste listener, `conta.criar` NÃO
      * é idempotente por natureza (sorteia um número novo a cada chamada) —
      * uma reentrega at-least-once criaria uma segunda conta pro mesmo
@@ -140,9 +142,17 @@ public class ContaComandoListener {
     }
 
     private void remover(ComandoSaga comando) {
-        String numeroConta = String.valueOf(comando.getPayload().get("numeroConta"));
+        Object numeroInformado = comando.getPayload().get("numeroConta");
+        String numeroConta = numeroInformado != null
+                ? String.valueOf(numeroInformado)
+                : comandoProcessadoRepository.findByIdSagaIdAndIdTipo(comando.getSagaId(), TIPO_CRIAR)
+                        .map(this::lerResposta)
+                        .map(resposta -> String.valueOf(resposta.get("numeroConta")))
+                        .orElse(null);
         try {
-            contaService.remover(numeroConta);
+            if (numeroConta != null) {
+                contaService.remover(numeroConta);
+            }
             responder(comando, "SUCESSO", null, null);
         } catch (Exception e) {
             log.error("Falha ao remover conta (compensação) na saga {}", comando.getSagaId(), e);
@@ -198,6 +208,14 @@ public class ContaComandoListener {
      */
     @SuppressWarnings("unchecked")
     private void transferirTodasDoGerente(ComandoSaga comando) {
+        Optional<ComandoProcessado> existente =
+                comandoProcessadoRepository.findByIdSagaIdAndIdTipo(comando.getSagaId(), comando.getTipo());
+        if (existente.isPresent()) {
+            log.info("conta.transferir-todas-do-gerente já processado antes para a saga {} — devolvendo o mesmo resultado", comando.getSagaId());
+            responder(comando, "SUCESSO", lerResposta(existente.get()), null);
+            return;
+        }
+
         try {
             String cpfGerenteOrigem = String.valueOf(comando.getPayload().get("cpfGerenteOrigem"));
             List<String> cpfsGerentesAtivos = (List<String>) comando.getPayload().get("gerentesAtivos");
@@ -206,7 +224,9 @@ public class ContaComandoListener {
                     contaService.transferirTodasDoGerente(cpfGerenteOrigem, cpfsGerentesAtivos);
 
             if (resultado.isEmpty()) {
-                responder(comando, "SUCESSO", Map.of("semContas", true), null);
+                Map<String, Object> semContas = Map.of("semContas", true);
+                salvarComandoProcessado(comando, semContas);
+                responder(comando, "SUCESSO", semContas, null);
                 return;
             }
 
@@ -216,10 +236,33 @@ public class ContaComandoListener {
             payload.put("cpfGerenteDestino", transferencia.cpfGerenteDestino());
             payload.put("numerosConta", transferencia.numerosConta());
             payload.put("cpfsClientes", transferencia.cpfsClientes());
+            salvarComandoProcessado(comando, payload);
             responder(comando, "SUCESSO", payload, null);
         } catch (Exception e) {
             log.error("Falha ao transferir contas do gerente removido na saga {}", comando.getSagaId(), e);
             responder(comando, "FALHA", null, "Falha ao transferir contas do gerente removido: " + e.getMessage());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void reverterTransferenciaDoGerente(ComandoSaga comando) {
+        String cpfGerenteOrigem = String.valueOf(comando.getPayload().get("cpfGerenteOrigem"));
+        try {
+            Map<String, Object> transferencia = comandoProcessadoRepository
+                    .findByIdSagaIdAndIdTipo(comando.getSagaId(), TIPO_TRANSFERIR_TODAS_DO_GERENTE)
+                    .map(this::lerResposta)
+                    .orElse(null);
+
+            if (transferencia != null && !Boolean.TRUE.equals(transferencia.get("semContas"))) {
+                contaService.reverterTransferenciaDoGerente(
+                        (List<String>) transferencia.get("numerosConta"),
+                        String.valueOf(transferencia.get("cpfGerenteDestino")),
+                        cpfGerenteOrigem);
+            }
+            responder(comando, "SUCESSO", null, null);
+        } catch (Exception e) {
+            log.error("Falha ao reverter a transferência de contas (compensação) na saga {}", comando.getSagaId(), e);
+            responder(comando, "FALHA", null, "Falha ao reverter a transferência de contas: " + e.getMessage());
         }
     }
 

@@ -1,7 +1,7 @@
 -- MS Gerente — schema-per-service: todo o domínio de Gerente vive no schema
 -- `ms_gerente`, isolado dos schemas dos demais microsserviços.
 --
--- Dados mínimos exigidos por docs/specs/03-decomposicao-subdominio.md. Sem
+-- Dados mínimos exigidos. Sem
 -- senha aqui: autenticação é responsabilidade do MS Auth (MongoDB).
 
 CREATE SCHEMA IF NOT EXISTS ms_gerente;
@@ -16,7 +16,7 @@ CREATE TABLE ms_gerente.gerentes (
 
 CREATE INDEX idx_gerentes_ativo ON ms_gerente.gerentes (ativo);
 
--- Idempotência de comandos de SAGA (S8) — docs/specs/05-nao-funcionais/07-rabbitmq-filas.md:
+-- Idempotência de comandos de SAGA (S8):
 -- "deduplicar pelo par (sagaId, tipo)". Só guarda gerente.inserir — reentrega
 -- at-least-once não pode criar um segundo gerente; os demais comandos deste
 -- serviço já são idempotentes por construção.

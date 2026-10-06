@@ -26,9 +26,9 @@ export interface DiaDoExtrato {
 }
 
 const NOME_DA_OPERACAO: Record<TipoMovimentacao, string> = {
-  DEPOSITO: 'Depósito',
-  SAQUE: 'Saque',
-  TRANSFERENCIA: 'Transferência',
+  depósito: 'Depósito',
+  saque: 'Saque',
+  transferência: 'Transferência',
 };
 
 /** Data de hoje no fuso do banco, sem hora. */
@@ -140,7 +140,7 @@ export function sentidoDe(movimentacao: Movimentacao, cpfDoCliente: string): Sen
     return 'SAIDA';
   }
 
-  return movimentacao.tipo === 'DEPOSITO' ? 'ENTRADA' : 'SAIDA';
+  return movimentacao.tipo === 'depósito' ? 'ENTRADA' : 'SAIDA';
 }
 
 function participante(

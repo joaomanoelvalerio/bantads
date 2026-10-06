@@ -46,8 +46,8 @@ public class SolicitacaoConsultaController {
     /**
      * R10 — síncrono (200), diferente de R9: não é SAGA, não passa pelo
      * Orquestrador. O e-mail é publicado direto daqui, fire-and-forget, sem
-     * `sagaId` (docs/specs/05-nao-funcionais/07-rabbitmq-filas.md —
-     * "mensagens fora de SAGA: não definir sagaId").
+     * `sagaId` —
+     * "mensagens fora de SAGA: não definir sagaId".
      */
     @PostMapping("/{cpf}/rejeitar")
     public void rejeitar(@PathVariable String cpf, @Valid @RequestBody RejeicaoRequest requisicao) {

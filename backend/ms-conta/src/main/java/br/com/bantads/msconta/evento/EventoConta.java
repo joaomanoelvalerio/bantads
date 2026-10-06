@@ -16,8 +16,7 @@ import org.hibernate.type.SqlTypes;
 /**
  * Espelha ms_conta.eventos_conta — o event store, lado COMMAND do CQRS
  * (backend/ms-conta/db/01-schema.sql). Mapeada já na S2 para validar a conexão
- * com o schema; append/replay real (fold ordenado por versao) é trabalho da S4
- * (ver docs/design/modelagem-ct.md).
+ * com o schema; append/replay real (fold ordenado por versao) é trabalho da S4.
  */
 @Entity
 @Table(schema = "ms_conta", name = "eventos_conta")

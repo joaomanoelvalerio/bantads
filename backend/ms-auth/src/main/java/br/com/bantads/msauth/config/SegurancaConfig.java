@@ -6,7 +6,7 @@ import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
- * Senhas com Argon2 (docs/specs/05-nao-funcionais/04-autenticacao.md).
+ * Senhas com Argon2.
  * Parâmetros default do Spring Security (`Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8`) —
  * razoáveis para este trabalho, sem tuning específico de hardware.
  */

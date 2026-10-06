@@ -18,8 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
- * SAGA 2 — Inserção de Gerente (R13),
- * docs/specs/05-nao-funcionais/09-sagas-api-compositions.md. Mesmo desenho
+ * SAGA 2 — Inserção de Gerente (R13). Mesmo desenho
  * sequencial/bloqueante de {@code AprovarClienteSagaService} — ver o
  * Javadoc de lá pra justificativa. Passos 4/5/6 são condicionais: só rodam
  * se o passo 3 encontrar uma conta pra transferir.
@@ -78,6 +77,7 @@ public class InserirGerenteSagaService {
                 Map.of("cpf", cpf, "nome", nome, "email", email, "telefone", telefone), TIMEOUT_PASSO);
         if (!r1.sucesso()) {
             log.warn("SAGA {} falhou no passo 1 (inserir gerente): {}", sagaId, r1.getErro());
+            compensarPasso1(sagaId, cpf);
             estado(sagaId, 1, "FALHA", cpf);
             jobRepositorio.marcarFalha(sagaId, mensagem(r1, "Não foi possível cadastrar o gerente"));
             return;
@@ -90,6 +90,7 @@ public class InserirGerenteSagaService {
                 Map.of("cpf", cpf, "login", email, "tipo", "GERENTE", "senha", senha), TIMEOUT_PASSO);
         if (!r2.sucesso()) {
             log.warn("SAGA {} falhou no passo 2 (criar credencial): {}", sagaId, r2.getErro());
+            compensarPasso2(sagaId, cpf);
             compensarPasso1(sagaId, cpf);
             estado(sagaId, 2, "FALHA", cpf);
             jobRepositorio.marcarFalha(sagaId, mensagem(r2, "Não foi possível gerar a credencial de acesso"));
@@ -112,7 +113,7 @@ public class InserirGerenteSagaService {
         boolean semConta = Boolean.TRUE.equals(r3.getPayload().get("semConta"));
         if (semConta) {
             // Passos 4/5/6 pulados — gerente criado sem contas, SAGA termina em sucesso
-            // (docs/specs/02-requisitos-funcionais.md, R13).
+            // (R13).
             estado(sagaId, 6, "SUCESSO", cpf);
             jobRepositorio.marcarConcluidoComoRecurso(sagaId, "gerentes", cpf);
             log.info("SAGA {} concluída com sucesso (sem conta a transferir) para o cpf {}", sagaId, cpf);
@@ -129,6 +130,7 @@ public class InserirGerenteSagaService {
                 Map.of("numeroConta", numeroConta, "cpfGerente", cpf), TIMEOUT_PASSO);
         if (!r4.sucesso()) {
             log.warn("SAGA {} falhou no passo 4 (atribuir conta): {}", sagaId, r4.getErro());
+            compensarPasso4(sagaId, numeroConta, cpfGerenteOrigem);
             compensarPasso2(sagaId, cpf);
             compensarPasso1(sagaId, cpf);
             estado(sagaId, 4, "FALHA", cpf);
@@ -166,6 +168,12 @@ public class InserirGerenteSagaService {
 
     private void compensarPasso1(String sagaId, String cpf) {
         publicador.enviarEAguardar(QUEUE_MS_GERENTE_CMD, sagaId, "gerente.remover", Map.of("cpf", cpf), TIMEOUT_PASSO);
+    }
+
+    private void compensarPasso4(String sagaId, String numeroConta, String cpfGerenteOrigem) {
+        publicador.enviarEAguardar(
+                QUEUE_MS_CONTA_CMD, sagaId, "conta.atribuir-gerente",
+                Map.of("numeroConta", numeroConta, "cpfGerente", cpfGerenteOrigem), TIMEOUT_PASSO);
     }
 
     private void compensarPasso2(String sagaId, String cpf) {

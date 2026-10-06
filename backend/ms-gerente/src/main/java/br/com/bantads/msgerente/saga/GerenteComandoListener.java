@@ -19,8 +19,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * SAGA Aprovar Cliente (R9, passo 2), SAGA Inserir Gerente (R13, passo 1 +
- * compensação) e SAGA Remover Gerente (R15, passos 1/4 + compensação) —
- * docs/specs/05-nao-funcionais/09-sagas-api-compositions.md.
+ * compensação) e SAGA Remover Gerente (R15, passos 1/4 + compensação).
  */
 @Component
 public class GerenteComandoListener {
@@ -80,7 +79,7 @@ public class GerenteComandoListener {
 
     /**
      * SAGA Inserir Gerente (R13, passo 1). Idempotente por (sagaId, tipo) —
-     * docs/specs/05-nao-funcionais/07-rabbitmq-filas.md, S8: `gerente.inserir`
+     * S8: `gerente.inserir`
      * não é idempotente por natureza (uma reentrega bateria no `UNIQUE` de
      * cpf/e-mail e pareceria um "cpf_ou_email_duplicado" de verdade, não uma
      * simples reentrega). Reentrega reconhecida só confirma SUCESSO de novo,
@@ -125,7 +124,9 @@ public class GerenteComandoListener {
     private void remover(ComandoSaga comando) {
         String cpf = texto(comando.getPayload(), "cpf");
         try {
-            if (gerenteRepository.existsById(cpf)) {
+            boolean inseridoNestaSaga =
+                    comandoProcessadoRepository.findByIdSagaIdAndIdTipo(comando.getSagaId(), TIPO_INSERIR).isPresent();
+            if (inseridoNestaSaga && gerenteRepository.existsById(cpf)) {
                 gerenteRepository.deleteById(cpf);
             }
             responder(comando, "SUCESSO", null, null);

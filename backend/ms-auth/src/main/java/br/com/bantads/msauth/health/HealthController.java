@@ -4,8 +4,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * GET /health -&gt; 200 se o serviço estiver no ar
- * (docs/specs/05-nao-funcionais/11-health-reboot.md).
+ * GET /health -&gt; 200 se o serviço estiver no ar.
  */
 @RestController
 public class HealthController {

@@ -10,8 +10,8 @@ import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Job assíncrono no Redis (docs/specs/05-nao-funcionais/08-jobs-assincronos.md).
- * Chave `job:&lt;jobId&gt;`, TTL 5 min (docs/specs/05-nao-funcionais/05-redis.md)
+ * Job assíncrono no Redis.
+ * Chave `job:&lt;jobId&gt;`, TTL 5 min
  * — o Gateway cria o job como PENDENTE ao publicar em `saga.cmd`; aqui só se
  * grava o desfecho (CONCLUIDO/FALHA), reescrevendo a mesma chave por
  * completo. As duas pontas (Gateway em Node, aqui em Java) precisam

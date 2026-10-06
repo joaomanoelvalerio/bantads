@@ -15,8 +15,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * Publica um comando de SAGA numa fila `ms.*.cmd` e aguarda a resposta
- * correlata em `orquestrador.reply` — timeout de 30s por passo
- * (docs/specs/05-nao-funcionais/09-sagas-api-compositions.md). A correlação é
+ * correlata em `orquestrador.reply` — timeout de 30s por passo.
+ * A correlação é
  * por (sagaId, tipo): dentro de uma mesma SAGA, cada passo usa um `tipo` de
  * comando diferente, então o par é suficiente para casar comando com
  * resposta na fila compartilhada.

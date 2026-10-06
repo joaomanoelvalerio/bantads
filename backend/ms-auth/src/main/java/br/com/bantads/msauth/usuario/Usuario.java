@@ -8,10 +8,10 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
- * Espelha docs/specs/03-decomposicao-subdominio.md — "Dados de Usuário: Id
+ * Espelha o enunciado — "Dados de Usuário: Id
  * usuário, CPF da pessoa, Tipo (cliente/gerente), login, senha (hash Argon2),
  * Ativo/Inativo". `login` é o e-mail do cliente/gerente — único, é a fonte da
- * verdade (docs/specs/05-nao-funcionais/04-autenticacao.md).
+ * verdade.
  */
 @Document(collection = "usuarios")
 @Getter

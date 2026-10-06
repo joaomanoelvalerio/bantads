@@ -28,7 +28,7 @@ public class GerenteService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Gerente não encontrado"));
     }
 
-    /** R14 — e-mail (login) e CPF não são alteráveis (docs/specs/02-requisitos-funcionais.md). */
+    /** R14 — e-mail (login) e CPF não são alteráveis. */
     public Gerente atualizar(String cpf, String nome, String telefone) {
         Gerente gerente = buscarPorCpf(cpf);
         gerente.setNome(nome);
@@ -41,7 +41,7 @@ public class GerenteService {
      * (reentrega do comando), não faz nada — em particular, não refaz a
      * checagem de "último ativo", que já não contaria mais com este CPF e
      * daria falso positivo. "Não é permitido remover o último gerente
-     * ativo" (docs/specs/02-requisitos-funcionais.md, R15) só se aplica à
+     * ativo" (R15) só se aplica à
      * transição ativo → inativo de verdade.
      */
     public void inativar(String cpf) {

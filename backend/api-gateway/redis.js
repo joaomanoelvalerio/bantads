@@ -1,5 +1,4 @@
-// Conexão com o Redis (cache, tokens, jobs, estado de SAGA — ver
-// docs/specs/05-nao-funcionais/05-redis.md). Semana 02: só estabelece a
+// Conexão com o Redis (cache, tokens, jobs, estado de SAGA). Semana 02: só estabelece a
 // conexão; sessão de login (Semana 03) e jobs assíncronos (Semana 06) vão
 // reusar este client.
 const Redis = require("ioredis");

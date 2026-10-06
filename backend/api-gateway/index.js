@@ -7,6 +7,9 @@ const { GERENTE_MS_API_URL, CLIENTE_MS_API_URL, CONTA_MS_API_URL, AUTH_MS_API_UR
 const sessao = require("./sessao");
 const jobs = require("./jobs");
 const { publicarComandoSaga } = require("./saga");
+const cache = require("./cache");
+const links = require("./links");
+const reboot = require("./reboot");
 
 // Conexão de infra (Semana 02) — sessão de login (S3) e SAGA (S6) reusam isto.
 require("./redis");
@@ -23,18 +26,17 @@ app.get("/health", (req, res) => {
   res.status(200).send("OK");
 });
 
-// POST /reboot — público, sem autenticação (docs/specs/05-nao-funcionais/11-health-reboot.md).
-// Stub da Semana 02: só confirma que a rota existe. A reconstrução completa
-// do seed em todos os serviços depende de cada MS expor sua própria rotina
-// de reset, que ainda não existe — ver docs/design/arquitetura-atual.md.
-app.post("/reboot", (req, res) => {
-  res.status(200).json({
-    status: "ok",
-    aviso: "stub — ainda não reconstrói o seed em nenhum serviço",
-  });
+// POST /reboot — público, sem autenticação.
+app.post("/reboot", async (req, res) => {
+  try {
+    res.status(200).json(await reboot.reiniciar());
+  } catch (erro) {
+    console.error("Falha no /reboot:", erro.message);
+    res.status(502).json({ status: "erro", message: "Falha ao reiniciar os serviços." });
+  }
 });
 
-// R2 — Login: API Composition (docs/specs/05-nao-funcionais/04-autenticacao.md).
+// R2 — Login: API Composition.
 // `express.json()` só nesta rota, não globalmente — os proxies abaixo
 // precisam repassar o corpo bruto das requisições como chegou.
 app.post("/login", express.json(), async (req, res) => {
@@ -93,7 +95,7 @@ app.post("/login", express.json(), async (req, res) => {
 // `/clientes` de req.url antes de entrar no proxy — sem isso a requisição
 // chegaria ao MS sem o prefixo que as rotas dele esperam.
 // `proxyReqOptDecorator` injeta a identidade (Semana 03) para os MSs
-// confiarem sem revalidar o JWT (docs/specs/05-nao-funcionais/03-api-gateway.md).
+// confiarem sem revalidar o JWT.
 function proxyPara(caminho, destino) {
   return httpProxy(destino, {
     // Numa requisição pro path-raiz do mount (ex.: POST /clientes em si, sem
@@ -108,11 +110,17 @@ function proxyPara(caminho, destino) {
       }
       return proxyReqOpts;
     },
+    userResDecorator: async (proxyRes, proxyResData, userReq) => {
+      if (caminho === "/gerentes" && userReq.method === "PUT" && proxyRes.statusCode < 300) {
+        await cache.invalidar(cache.chaveGerente(decodeURIComponent(userReq.url.slice(1))));
+      }
+      return links.reescreverLinksDoCorpo(proxyResData, proxyRes.headers["content-type"], links.origemPublica(userReq));
+    },
   });
 }
 
-// Rotas de área do gerente (docs/specs/05-nao-funcionais/03-api-gateway.md —
-// "restrições por perfil entram rota a rota conforme cada requisito exigir").
+// Rotas de área do gerente —
+// "restrições por perfil entram rota a rota conforme cada requisito exigir".
 // Só o path raiz de /clientes e /gerentes entra aqui — GET /clientes/{cpf} e
 // GET /gerentes/{cpf} continuam abertos a qualquer sessão (usados na
 // composição do próprio login e na resolução do recurso de um job do R9).
@@ -134,7 +142,7 @@ function exigeSessaoDeGerente(req) {
 
 // A partir daqui, toda rota exige sessão válida — exceto o autocadastro
 // (POST /clientes), a única escrita pública além do login
-// (docs/specs/02-requisitos-funcionais.md, R1; front espelha isto em
+// (R1; front espelha isto em
 // rotas-publicas.ts).
 app.use(async (req, res, next) => {
   if (req.method === "POST" && req.path === "/clientes") {
@@ -178,11 +186,11 @@ async function nomeDoCliente(cpf) {
   }
 }
 
-// R6 — enriquecimento da transferência (docs/specs/05-nao-funcionais/10-cqrs.md):
+// R6 — enriquecimento da transferência:
 // o front só manda contaDestino/valor (não sabe CPF nem nome de quem recebe);
 // o MS Conta resolve cpfDestino sozinho, mas nomeOrigem/nomeDestino dependiam
 // do Gateway existir para consultar o MS Cliente antes de rotear — até agora
-// esses campos ficavam sempre null no extrato (ver docs/design/suposicoes.md).
+// esses campos ficavam sempre null no extrato.
 // Rota específica registrada antes do proxy genérico de /contas, então esta
 // intercepta só a transferência; tudo mais sob /contas segue passando direto.
 app.post("/contas/:numero/transferencia", express.json(), async (req, res) => {
@@ -234,7 +242,7 @@ app.post("/contas/:numero/transferencia", express.json(), async (req, res) => {
   }
 });
 
-// R9 — Aprovar Cliente [SAGA] (docs/specs/05-nao-funcionais/09-sagas-api-compositions.md):
+// R9 — Aprovar Cliente [SAGA]:
 // o Gateway só cria o job (PENDENTE, jobId == sagaId) e publica em `saga.cmd`
 // — quem executa os 7 passos é o Orquestrador; devolve 202 imediatamente.
 // Rota específica antes do proxy genérico de /solicitacoes, mesmo padrão da
@@ -246,6 +254,7 @@ app.post("/solicitacoes/:cpf/aprovar", async (req, res) => {
   const jobId = crypto.randomUUID();
 
   try {
+    await cache.invalidar(cache.chaveCliente(cpf));
     await jobs.criarJobPendente(jobId, "clientes", cpf);
     await publicarComandoSaga("saga.cmd", jobId, "aprovar-cliente", { cpf });
     res.status(202).json({ jobId });
@@ -283,6 +292,7 @@ app.post("/gerentes", express.json(), async (req, res) => {
 
   const jobId = crypto.randomUUID();
   try {
+    await cache.invalidar(cache.chaveGerente(cpf));
     await jobs.criarJobPendente(jobId, "gerentes", cpf);
     await publicarComandoSaga("saga.cmd", jobId, "inserir-gerente", { cpf, nome, email, telefone, senha });
     res.status(202).json({ jobId });
@@ -294,8 +304,7 @@ app.post("/gerentes", express.json(), async (req, res) => {
 
 // R15 — Remover Gerente [SAGA]: mesmo padrão 202+job de R9/R13, mas com uma
 // pré-condição síncrona antes de publicar em saga.cmd — um gerente não pode
-// remover a si mesmo (docs/specs/05-nao-funcionais/09-sagas-api-compositions.md,
-// SAGA 3). A regra do último gerente ativo NÃO é checada aqui: depende do
+// remover a si mesmo (SAGA 3). A regra do último gerente ativo NÃO é checada aqui: depende do
 // estado real no MS Gerente no momento da SAGA, então vem como FALHA do job.
 app.delete("/gerentes/:cpf", async (req, res) => {
   const { cpf } = req.params;
@@ -306,6 +315,7 @@ app.delete("/gerentes/:cpf", async (req, res) => {
 
   const jobId = crypto.randomUUID();
   try {
+    await cache.invalidar(cache.chaveGerente(cpf));
     await jobs.criarJobPendente(jobId, "gerentes", cpf);
     await publicarComandoSaga("saga.cmd", jobId, "remover-gerente", { cpf });
     res.status(202).json({ jobId });
@@ -339,7 +349,7 @@ app.get("/gerentes", async (req, res) => {
       .map((gerente) => ({ ...gerente, quantidadeClientes: contagemPorCpf.get(gerente.cpf) ?? 0 }))
       .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
-    res.json(listado);
+    res.json(links.reescreverLinks(listado, links.origemPublica(req)));
   } catch (erro) {
     console.error("Falha ao compor a listagem de gerentes (R12):", erro.message);
     res.status(502).json({ message: "Falha ao consultar gerentes." });
@@ -360,6 +370,7 @@ app.get("/clientes", async (req, res) => {
     const clientes = await clientesResp.json();
     const contas = contasResp.status === 200 ? await contasResp.json() : [];
     const saldoPorCpf = new Map(contas.map((conta) => [conta.cpfCliente, conta.saldo]));
+    const origem = links.origemPublica(req);
 
     const listado = clientes
       .map((cliente) => ({
@@ -368,6 +379,10 @@ app.get("/clientes", async (req, res) => {
         cidade: cliente.cidade,
         estado: cliente.uf,
         saldo: saldoPorCpf.get(cliente.cpf) ?? null,
+        _links: {
+          self: links.link(origem, `/clientes/${encodeURIComponent(cliente.cpf)}`),
+          conta: links.link(origem, `/contas/cliente/${encodeURIComponent(cliente.cpf)}`),
+        },
       }))
       .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
@@ -381,7 +396,7 @@ app.get("/clientes", async (req, res) => {
 // R16 — Relatório de Clientes: API Composition (MS Cliente + MS Conta + MS
 // Gerente), mas o contrato pede o mesmo formato 202+job das SAGAs (R9/R13) —
 // como a composição é rápida e o próprio Gateway resolve, o job já nasce
-// CONCLUIDO em vez de PENDENTE seguido de atualização (docs/specs/05-nao-funcionais/08-jobs-assincronos.md).
+// CONCLUIDO em vez de PENDENTE seguido de atualização.
 app.get("/relatorios/clientes", async (req, res) => {
   const jobId = crypto.randomUUID();
   try {
@@ -432,6 +447,26 @@ app.get("/relatorios/clientes", async (req, res) => {
 app.get("/contas", (req, res) => {
   res.status(403).json({ message: "Acesso negado." });
 });
+
+async function responderComCache(req, res, chave, url) {
+  try {
+    const { status, contentType, corpo } = await cache.lerComCache(chave, url);
+    res.status(status);
+    res.set("Content-Type", contentType ?? "application/json");
+    res.send(links.reescreverLinksDoCorpo(corpo, contentType, links.origemPublica(req)));
+  } catch (erro) {
+    console.error(`Falha ao consultar ${url}:`, erro.message);
+    res.status(502).json({ message: "Falha ao consultar o cadastro." });
+  }
+}
+
+app.get("/clientes/:cpf", (req, res) =>
+  responderComCache(req, res, cache.chaveCliente(req.params.cpf), `${CLIENTE_MS_API_URL}/clientes/${encodeURIComponent(req.params.cpf)}`),
+);
+
+app.get("/gerentes/:cpf", (req, res) =>
+  responderComCache(req, res, cache.chaveGerente(req.params.cpf), `${GERENTE_MS_API_URL}/gerentes/${encodeURIComponent(req.params.cpf)}`),
+);
 
 app.use("/clientes", proxyPara("/clientes", CLIENTE_MS_API_URL));
 app.use("/gerentes", proxyPara("/gerentes", GERENTE_MS_API_URL));

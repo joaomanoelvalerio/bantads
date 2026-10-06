@@ -1,8 +1,7 @@
 -- MS Conta — schema-per-service: todo o domínio de Conta vive no schema `ms_conta`,
 -- isolado dos schemas dos demais microsserviços dentro do mesmo container Postgres.
 --
--- CQRS + Event Sourcing (obrigatório para este MS — ver
--- docs/specs/05-nao-funcionais/10-cqrs.md):
+-- CQRS + Event Sourcing (obrigatório para este MS):
 --   - lado COMMAND (ms_conta.eventos_conta): event store, fonte da verdade.
 --   - lado QUERY (ms_conta.contas / ms_conta.movimentacoes): read model
 --     desnormalizado, sincronizado de forma assíncrona e idempotente via a fila
@@ -81,13 +80,13 @@ CREATE INDEX idx_movimentacoes_conta_data ON ms_conta.movimentacoes (numero_cont
 COMMENT ON TABLE ms_conta.movimentacoes IS
     'Histórico para o extrato (R7). cpf/nome_origem e cpf/nome_destino só são '
     'preenchidos quando tipo = transferência — enriquecidos pelo API Gateway '
-    'antes de rotear a requisição (ver docs/specs/05-nao-funcionais/10-cqrs.md), '
+    'antes de rotear a requisição, '
     'pois o MS Conta não conhece nomes de clientes. Uma transferência gera uma '
     'linha em cada conta (origem e destino); o front decide a cor '
     '(vermelho/azul) comparando numero_conta ao lado origem/destino da linha.';
 
 -- ---------------------------------------------------------------------------
--- Idempotência de comandos de SAGA (S8) — docs/specs/05-nao-funcionais/07-rabbitmq-filas.md:
+-- Idempotência de comandos de SAGA (S8):
 -- "deduplicar pelo par (sagaId, tipo)". Só guarda os comandos que CRIAM algo
 -- (conta.criar) — reentrega at-least-once não pode criar uma segunda conta;
 -- os demais comandos deste serviço já são idempotentes por construção

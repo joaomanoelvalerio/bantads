@@ -26,7 +26,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 /**
  * Prova de ponta a ponta do exemplo que a própria especificação usa para
- * "optimistic locking resolve race condition" (docs/specs/05-nao-funcionais/10-cqrs.md):
+ * "optimistic locking resolve race condition":
  * 2 saques simultâneos na mesma conta, com saldo para só UM deles. Dispara os
  * dois de verdade em threads separadas (não sequencialmente) para que a
  * corrida na constraint unique(objeto_id, versao) realmente aconteça.

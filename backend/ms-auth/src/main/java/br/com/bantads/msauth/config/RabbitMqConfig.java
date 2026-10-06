@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * SAGA Aprovar Cliente (R9, S6) — redeclara `ms.auth.cmd`/`orquestrador.reply`
  * com os mesmos argumentos que o Orquestrador (dono das filas) já declara,
- * para este serviço não depender da ordem de subida (docs/specs/05-nao-funcionais/07-rabbitmq-filas.md).
+ * para este serviço não depender da ordem de subida.
  */
 @Configuration
 public class RabbitMqConfig {

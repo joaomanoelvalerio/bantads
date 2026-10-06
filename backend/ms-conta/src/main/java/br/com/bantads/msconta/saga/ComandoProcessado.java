@@ -12,7 +12,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 /**
- * Idempotência por (sagaId, tipo) — docs/specs/05-nao-funcionais/07-rabbitmq-filas.md,
+ * Idempotência por (sagaId, tipo),
  * S8. Guarda só os comandos que CRIAM algo (`conta.criar`): a chave
  * primária composta é o próprio mecanismo de deduplicação — uma segunda
  * tentativa de inserir a mesma (sagaId, tipo) falha com violação de

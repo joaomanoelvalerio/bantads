@@ -20,10 +20,10 @@ import org.springframework.stereotype.Component;
  * mesmo comando `auth.criar-credencial` para as duas: R9 não manda `senha`
  * no payload (gera uma aleatória e devolve em claro na resposta, só pra
  * poder mandar por e-mail); R13 manda a senha escolhida no formulário
- * (docs/specs/02-requisitos-funcionais.md, R13 — "senha informada no
+ * (R13 — "senha informada no
  * formulário, não enviada por e-mail", então não precisa vir de volta na
  * resposta). A senha em claro nunca é logada, gravada ou incluída no estado
- * da SAGA no Redis (docs/specs/05-nao-funcionais/09-sagas-api-compositions.md).
+ * da SAGA no Redis.
  */
 @Component
 public class AuthComandoListener {
@@ -73,7 +73,7 @@ public class AuthComandoListener {
     }
 
     /**
-     * Idempotência por (sagaId, tipo) — docs/specs/05-nao-funcionais/07-rabbitmq-filas.md,
+     * Idempotência por (sagaId, tipo),
      * S8. Sem o marcador, uma reentrega bateria no `login` já criado pela
      * primeira tentativa e pareceria um "login_duplicado" de verdade — o
      * caso especial de R9 que marca a solicitação como Não aprovada, quando
@@ -137,7 +137,9 @@ public class AuthComandoListener {
     private void removerCredencial(ComandoSaga comando) {
         String cpf = String.valueOf(comando.getPayload().get("cpf"));
         try {
-            usuarioRepository.deleteByCpf(cpf);
+            if (comandoProcessadoRepository.findBySagaIdAndTipo(comando.getSagaId(), TIPO_CRIAR).isPresent()) {
+                usuarioRepository.deleteByCpf(cpf);
+            }
             responder(comando, "SUCESSO", null, null);
         } catch (Exception e) {
             log.error("Falha ao remover credencial (compensação) para a saga {}", comando.getSagaId(), e);

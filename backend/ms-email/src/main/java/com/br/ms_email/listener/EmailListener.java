@@ -17,7 +17,7 @@ public class EmailListener {
 
     @RabbitListener(queues = RabbitMQConfig.QUEUE_EMAIL_CMD)
     public void receberComandoEmail(EmailMessage mensagem) {
-        log.info("Comando de e-mail recebido: {}", mensagem);
+        log.info("Comando de e-mail recebido: sagaId={} tipo={}", mensagem.getSagaId(), mensagem.getTipo());
         try {
             emailService.processarEnvioEmail(mensagem.getTipo(), mensagem.getPayload());
         } catch (Exception e) {

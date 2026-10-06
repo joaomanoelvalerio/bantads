@@ -31,7 +31,7 @@
 	</properties>
 	<dependencies>
 		<dependency>
-			<!-- Todo MS precisa expor GET /health (docs/specs/05-nao-funcionais/11-health-reboot.md).
+			<!-- Todo MS precisa expor GET /health.
 			     Também traz jackson-databind transitivamente, que o
 			     Jackson2JsonMessageConverter (RabbitMQConfig) precisa em tempo de
 			     execução e que nenhuma outra dependência daqui trazia. -->

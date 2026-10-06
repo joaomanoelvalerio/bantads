@@ -31,7 +31,7 @@
 	</properties>
 	<dependencies>
 		<dependency>
-			<!-- Todo MS precisa expor GET /health (docs/specs/05-nao-funcionais/11-health-reboot.md);
+			<!-- Todo MS precisa expor GET /health;
 			     também é o que mantém o processo vivo — sem nenhum servidor web nem
 			     @RabbitListener, o JVM não tinha nada segurando a thread principal
 			     e o container encerrava sozinho (exit 0) logo depois de subir. -->

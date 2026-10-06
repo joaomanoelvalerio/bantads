@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * SAGA Aprovar Cliente (R9, S6) — este serviço só consome `ms.gerente.cmd` e
  * publica em `orquestrador.reply`; quem declara as duas filas "de dono" é o
- * Orquestrador (docs/specs/05-nao-funcionais/07-rabbitmq-filas.md), mas
+ * Orquestrador, mas
  * redeclarar aqui com os MESMOS argumentos deixa este serviço independente da
  * ordem de subida — RabbitMQ trata declare de fila idêntica como no-op.
  */

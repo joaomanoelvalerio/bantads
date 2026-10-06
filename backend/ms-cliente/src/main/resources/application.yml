@@ -12,7 +12,7 @@ spring:
     open-in-view: false
     show-sql: false
     hibernate:
-      # DDL e schema sao gerenciados pelos scripts em db/ (ver docs/design/modelagem-ct.md),
+      # DDL e schema sao gerenciados pelos scripts em db/,
       # nunca pelo Hibernate. `validate` apenas confirma na subida que as entidades
       # batem com as tabelas reais.
       ddl-auto: validate
