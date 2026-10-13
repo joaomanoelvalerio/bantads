@@ -1,11 +1,21 @@
 services:
+  frontend:
+    build: ./frontend
+    mem_limit: 64m
+    ports:
+      - "4200:80"
+    depends_on:
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/health"]
+
   gateway:
     build: ./backend/api-gateway
     mem_limit: 256m
     ports:
-      # Único serviço exposto ao host — é o ponto único de acesso;
-      # o front (`environment.apiUrl`,
-      # rodando via `ng serve` fora do Docker) espera localhost:3000.
+      # Ponto único de acesso ao back-end; o front roda no navegador do
+      # host e chama `environment.apiUrl` = localhost:3000.
       - "3000:3000"
     env_file:
       - .env
@@ -209,6 +219,8 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
     command: ["mongod", "--wiredTigerCacheSizeGB", "0.25"]
+    volumes:
+      - mongo_data:/data/db
     healthcheck:
       test:
         [
@@ -248,7 +260,10 @@ services:
     env_file:
       - .env
     environment:
-      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit vm_memory_high_watermark 0.6
+      # Sem o override o 0.6 é calculado sobre a RAM do host, não sobre o
+      # mem_limit — o contêiner seria morto por OOM antes do alarme disparar.
+      # 536870912 = 512m, o mesmo valor do mem_limit acima.
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit vm_memory_high_watermark 0.6 -rabbit total_memory_available_override_value 536870912
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
     healthcheck:
@@ -256,3 +271,10 @@ services:
 
 volumes:
   postgres_data:
+  mongo_data:
+
+# Rede interna explícita: todos os serviços entram nela por padrão e se
+# enxergam pelo nome do serviço; para fora, só as portas publicadas.
+networks:
+  default:
+    name: bantads

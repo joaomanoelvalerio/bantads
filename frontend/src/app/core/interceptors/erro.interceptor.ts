@@ -31,6 +31,12 @@ function extrairMensagem(resposta: HttpErrorResponse): string {
     return MENSAGEM_INDISPONIVEL;
   }
 
+  // 500 é falha não prevista: o texto, quando vem, é o da exceção, não uma
+  // mensagem para o usuário.
+  if (resposta.status === 500) {
+    return MENSAGEM_GENERICA;
+  }
+
   const corpo: unknown = resposta.error;
 
   if (typeof corpo === 'string' && corpo.trim().length > 0) {

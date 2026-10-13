@@ -8,6 +8,7 @@ if [ ! -f .env ]; then
   echo "Nenhum .env encontrado — copiando de .env.example."
   echo "Preencha as senhas (Postgres, RabbitMQ, SMTP) antes de rodar de novo."
   cp .env.example .env
+  exit 1
 fi
 
 echo "==> Buildando as imagens..."

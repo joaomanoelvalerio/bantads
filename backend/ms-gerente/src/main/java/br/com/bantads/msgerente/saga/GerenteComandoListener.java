@@ -94,6 +94,14 @@ public class GerenteComandoListener {
 
         Map<String, Object> dados = comando.getPayload();
         try {
+            // CPF é @Id atribuído: com ele já existente, o save vira merge
+            // (UPDATE) em vez de INSERT, não bate no UNIQUE e sobrescreveria o
+            // gerente — que a compensação desta saga depois apagaria.
+            if (gerenteRepository.existsById(texto(dados, "cpf"))) {
+                log.warn("CPF de gerente já cadastrado na saga {}", comando.getSagaId());
+                responder(comando, "FALHA", Map.of("motivo", "cpf_ou_email_duplicado"), "CPF ou e-mail já cadastrado");
+                return;
+            }
             Gerente gerente = new Gerente();
             gerente.setCpf(texto(dados, "cpf"));
             gerente.setNome(texto(dados, "nome"));

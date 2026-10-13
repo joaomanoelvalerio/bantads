@@ -1,4 +1,12 @@
-import { Component, computed, inject, input, signal } from '@angular/core';
+import {
+  Component,
+  Injector,
+  afterNextRender,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -67,6 +75,7 @@ export class OperacaoValorComponent {
 
   private readonly contas = inject(ContaService);
   private readonly area = inject(ClienteComponent);
+  private readonly injector = inject(Injector);
 
   protected readonly textos = computed<TextosDaOperacao>(() => TEXTOS[this.operacao()]);
 
@@ -174,10 +183,17 @@ export class OperacaoValorComponent {
 
     // 422 é saldo insuficiente: a mensagem fica junto ao campo e o valor digitado
     // permanece no formulário.
+    // O campo é recriado ao sair da confirmação e, ao ser religado, o Angular
+    // revalida o controle; por isso o erro só é marcado depois dessa renderização.
     if (falha.status === 422) {
-      const controle = this.formulario.controls.valor;
-      controle.setErrors({ servidor: falha.message });
-      controle.markAsTouched();
+      afterNextRender(
+        () => {
+          const controle = this.formulario.controls.valor;
+          controle.setErrors({ servidor: falha.message });
+          controle.markAsTouched();
+        },
+        { injector: this.injector },
+      );
       return;
     }
 
