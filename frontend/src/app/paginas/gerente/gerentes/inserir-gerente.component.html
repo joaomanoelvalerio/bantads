@@ -33,9 +33,17 @@
           <div class="grade">
             <mat-form-field appearance="outline" class="grade__largo">
               <mat-label>Nome completo</mat-label>
-              <input matInput type="text" formControlName="nome" autocomplete="off" />
+              <input
+                matInput
+                type="text"
+                formControlName="nome"
+                autocomplete="off"
+                [attr.maxlength]="120"
+              />
               @if (formulario.controls.nome.hasError('required')) {
                 <mat-error>Informe o nome do gerente.</mat-error>
+              } @else if (formulario.controls.nome.hasError('maxlength')) {
+                <mat-error>O nome pode ter no máximo 120 caracteres.</mat-error>
               }
             </mat-form-field>
 

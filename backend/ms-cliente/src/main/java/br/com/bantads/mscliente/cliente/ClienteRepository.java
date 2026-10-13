@@ -1,9 +1,13 @@
 package br.com.bantads.mscliente.cliente;
 
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 public interface ClienteRepository extends JpaRepository<Cliente, String> {
+
+    /** R11 (listagem) — ordem determinística em vez de depender da ordem física da tabela. */
+    List<Cliente> findAllByOrderByCpfAsc();
 
     /**
      * Compensação da SAGA Aprovar Cliente (R9) — idempotente: não achar nada

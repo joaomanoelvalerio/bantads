@@ -8,6 +8,9 @@ public interface ContaRepository extends JpaRepository<Conta, String> {
 
     Optional<Conta> findByCpfCliente(String cpfCliente);
 
+    /** Uso interno (ContaController.listarTodas) — ordem determinística em vez de depender da ordem física da tabela. */
+    List<Conta> findAllByOrderByNumeroContaAsc();
+
     /** SAGA Aprovar Cliente (R9, passo 3) — "gerente com menos clientes" == menos contas (1 conta por cliente). */
     long countByCpfGerente(String cpfGerente);
 

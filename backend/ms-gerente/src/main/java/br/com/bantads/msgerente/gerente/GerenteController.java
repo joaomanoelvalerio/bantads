@@ -2,6 +2,7 @@ package br.com.bantads.msgerente.gerente;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
@@ -48,9 +49,11 @@ public class GerenteController {
     @Setter
     public static class AtualizacaoGerenteRequest {
         @NotBlank
+        @Size(max = 120)
         private String nome;
 
         @NotBlank
+        @Size(max = 20)
         private String telefone;
     }
 }

@@ -39,7 +39,7 @@ public class ContaService {
 
     /** Uso interno (Gateway compõe R11/R12/R16) — ver comentário em ContaController.listarTodas. */
     public List<Conta> listarTodas() {
-        return contaRepository.findAll();
+        return contaRepository.findAllByOrderByNumeroContaAsc();
     }
 
     public Conta buscarPorNumero(String numeroConta) {

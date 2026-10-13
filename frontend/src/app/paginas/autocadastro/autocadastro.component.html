@@ -54,11 +54,19 @@
             <div class="grade">
               <mat-form-field appearance="outline" class="grade__largo">
                 <mat-label>Nome completo</mat-label>
-                <input matInput type="text" formControlName="nome" autocomplete="name" />
+                <input
+                  matInput
+                  type="text"
+                  formControlName="nome"
+                  autocomplete="name"
+                  [attr.maxlength]="120"
+                />
                 @if (formulario.controls.nome.hasError('required')) {
                   <mat-error>Informe seu nome completo.</mat-error>
                 } @else if (formulario.controls.nome.hasError('minlength')) {
                   <mat-error>O nome deve ter ao menos 3 caracteres.</mat-error>
+                } @else if (formulario.controls.nome.hasError('maxlength')) {
+                  <mat-error>O nome pode ter no máximo 120 caracteres.</mat-error>
                 }
               </mat-form-field>
 
@@ -159,9 +167,11 @@
 
               <mat-form-field appearance="outline">
                 <mat-label>Número</mat-label>
-                <input matInput type="text" formControlName="numero" />
+                <input matInput type="text" formControlName="numero" [attr.maxlength]="10" />
                 @if (formulario.controls.numero.hasError('required')) {
                   <mat-error>Informe o número.</mat-error>
+                } @else if (formulario.controls.numero.hasError('maxlength')) {
+                  <mat-error>O número pode ter no máximo 10 caracteres.</mat-error>
                 }
               </mat-form-field>
 
@@ -172,22 +182,30 @@
                   type="text"
                   formControlName="logradouro"
                   autocomplete="street-address"
+                  [attr.maxlength]="120"
                 />
                 @if (formulario.controls.logradouro.hasError('required')) {
                   <mat-error>Informe o logradouro.</mat-error>
+                } @else if (formulario.controls.logradouro.hasError('maxlength')) {
+                  <mat-error>O logradouro pode ter no máximo 120 caracteres.</mat-error>
                 }
               </mat-form-field>
 
               <mat-form-field appearance="outline" class="grade__largo">
                 <mat-label>Complemento (opcional)</mat-label>
-                <input matInput type="text" formControlName="complemento" />
+                <input matInput type="text" formControlName="complemento" [attr.maxlength]="60" />
+                @if (formulario.controls.complemento.hasError('maxlength')) {
+                  <mat-error>O complemento pode ter no máximo 60 caracteres.</mat-error>
+                }
               </mat-form-field>
 
               <mat-form-field appearance="outline">
                 <mat-label>Cidade</mat-label>
-                <input matInput type="text" formControlName="cidade" />
+                <input matInput type="text" formControlName="cidade" [attr.maxlength]="80" />
                 @if (formulario.controls.cidade.hasError('required')) {
                   <mat-error>Informe a cidade.</mat-error>
+                } @else if (formulario.controls.cidade.hasError('maxlength')) {
+                  <mat-error>A cidade pode ter no máximo 80 caracteres.</mat-error>
                 }
               </mat-form-field>
 
