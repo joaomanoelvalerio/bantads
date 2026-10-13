@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, Injector, afterNextRender, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -46,6 +46,7 @@ interface TransferenciaRevisada {
 export class TransferenciaComponent {
   private readonly contas = inject(ContaService);
   private readonly area = inject(ClienteComponent);
+  private readonly injector = inject(Injector);
 
   protected readonly conta = this.area.conta;
   protected readonly carregandoConta = this.area.consultando;
@@ -162,9 +163,19 @@ export class TransferenciaComponent {
     this.erro.set(falha.message);
   }
 
+  /**
+   * Os campos são recriados ao sair da confirmação e, ao serem religados, o
+   * Angular revalida os controles; por isso o erro só é marcado depois dessa
+   * renderização.
+   */
   private marcarErroDoServidor(campo: 'contaDestino' | 'valor', mensagem: string): void {
-    const controle = this.formulario.controls[campo];
-    controle.setErrors({ servidor: mensagem });
-    controle.markAsTouched();
+    afterNextRender(
+      () => {
+        const controle = this.formulario.controls[campo];
+        controle.setErrors({ servidor: mensagem });
+        controle.markAsTouched();
+      },
+      { injector: this.injector },
+    );
   }
 }

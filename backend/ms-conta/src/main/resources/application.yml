@@ -1,5 +1,10 @@
 server:
   port: ${SERVER_PORT:8081}
+  # Leva ao corpo do erro o texto da ResponseStatusException ("Saldo
+  # insuficiente", "Já existe uma solicitação...") — sem isto o Spring
+  # devolve só o "error" em inglês ("Unprocessable Entity").
+  error:
+    include-message: always
 
 spring:
   application:
