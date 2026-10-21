@@ -127,7 +127,7 @@ export class TransferenciaComponent {
       error: (falha: ErroApi) => {
         this.enviando.set(false);
         this.revisada.set(null);
-        this.tratarFalha(falha);
+        this.tratarFalha(falha, revisada.contaDestino === numero);
       },
     });
   }
@@ -142,15 +142,16 @@ export class TransferenciaComponent {
     this.area.consultar();
   }
 
-  private tratarFalha(falha: ErroApi): void {
+  private tratarFalha(falha: ErroApi, destinoEhAPropriaConta: boolean): void {
     // 401 já foi tratado pelo interceptor, que encerra a sessão e leva ao login.
     if (falha.status === 401) {
       return;
     }
 
-    // 404 é conta destino inexistente; 422 é saldo insuficiente. Nos dois casos a
-    // mensagem fica junto ao campo e o que foi digitado permanece no formulário.
-    if (falha.status === 404) {
+    // 404 é conta destino inexistente; 422 é saldo insuficiente ou transferência
+    // para a própria conta. A mensagem fica junto ao campo responsável e o que foi
+    // digitado permanece no formulário.
+    if (falha.status === 404 || (falha.status === 422 && destinoEhAPropriaConta)) {
       this.marcarErroDoServidor('contaDestino', falha.message);
       return;
     }
