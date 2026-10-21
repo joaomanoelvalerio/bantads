@@ -149,6 +149,14 @@ export class GerenteComponent {
     return this.andamento().get(cpf) ?? null;
   }
 
+  /**
+   * O mesmo CPF pode ter uma solicitação Não aprovada antiga e uma Pendente nova;
+   * só a Pendente é aprovada ou recusada, então só ela mostra o andamento.
+   */
+  protected andamentoDaLinha(linha: LinhaDaTabela): AndamentoDaLinha | null {
+    return linha.solicitacao.status === 'PENDENTE' ? this.andamentoDe(linha.solicitacao.cpf) : null;
+  }
+
   protected aprovar(solicitacao: SolicitacaoAnalisada): void {
     if (solicitacao.status !== 'PENDENTE' || this.andamentoDe(solicitacao.cpf) !== null) {
       return;

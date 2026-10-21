@@ -74,8 +74,8 @@
           </tr>
         </thead>
         <tbody>
-          @for (linha of linhas(); track linha.solicitacao.cpf) {
-            <tr [class.linha--ocupada]="andamentoDe(linha.solicitacao.cpf) !== null">
+          @for (linha of linhas(); track $index) {
+            <tr [class.linha--ocupada]="andamentoDaLinha(linha) !== null">
               <td class="numerico">{{ linha.solicitacao.cpf | documento: 'cpf' }}</td>
               <td>{{ linha.solicitacao.nome }}</td>
               <td class="numerico celula--direita">{{ linha.solicitacao.salario | moeda }}</td>
@@ -92,7 +92,7 @@
               <td class="celula--motivo">{{ linha.solicitacao.motivo ?? '—' }}</td>
               <td class="numerico">{{ linha.analisadaEm ?? '—' }}</td>
               <td class="celula--acoes">
-                @if (andamentoDe(linha.solicitacao.cpf); as andamento) {
+                @if (andamentoDaLinha(linha); as andamento) {
                   <span class="processando" role="status">
                     <mat-progress-spinner mode="indeterminate" [diameter]="16" />
                     <span>{{ rotuloDoAndamento[andamento] }}</span>
