@@ -50,6 +50,46 @@ const CAMPOS_DE_MENSAGEM = ['mensagem', 'message'];
  * R14 já com o estado novo. A ordem é a do back-end. Depois de uma remoção quem
  * manda é a lista recarregada, nunca uma suposição do front sobre a SAGA.
  */
+/**
+ * R12 e R15. A lista é consultada toda vez que a tela abre, então volta de R13 ou
+ * R14 já com o estado novo. A ordem é a do back-end. Depois de uma remoção quem
+ * manda é a lista recarregada, nunca uma suposição do front sobre a SAGA.
+ */
+/**
+ * R12 e R15. A lista é consultada toda vez que a tela abre, então volta de R13 ou
+ * R14 já com o estado novo. A ordem é a do back-end. Depois de uma remoção quem
+ * manda é a lista recarregada, nunca uma suposição do front sobre a SAGA.
+ */
+/**
+ * R12 e R15. A lista é consultada toda vez que a tela abre, então volta de R13 ou
+ * R14 já com o estado novo. A ordem é a do back-end. Depois de uma remoção quem
+ * manda é a lista recarregada, nunca uma suposição do front sobre a SAGA.
+ */
+/**
+ * R12 e R15. A lista é consultada toda vez que a tela abre, então volta de R13 ou
+ * R14 já com o estado novo. A ordem é a do back-end. Depois de uma remoção quem
+ * manda é a lista recarregada, nunca uma suposição do front sobre a SAGA.
+ */
+/**
+ * R12 e R15. A lista é consultada toda vez que a tela abre, então volta de R13 ou
+ * R14 já com o estado novo. A ordem é a do back-end. Depois de uma remoção quem
+ * manda é a lista recarregada, nunca uma suposição do front sobre a SAGA.
+ */
+/**
+ * R12 e R15. A lista é consultada toda vez que a tela abre, então volta de R13 ou
+ * R14 já com o estado novo. A ordem é a do back-end. Depois de uma remoção quem
+ * manda é a lista recarregada, nunca uma suposição do front sobre a SAGA.
+ */
+/**
+ * R12 e R15. A lista é consultada toda vez que a tela abre, então volta de R13 ou
+ * R14 já com o estado novo. A ordem é a do back-end. Depois de uma remoção quem
+ * manda é a lista recarregada, nunca uma suposição do front sobre a SAGA.
+ */
+/**
+ * R12 e R15. A lista é consultada toda vez que a tela abre, então volta de R13 ou
+ * R14 já com o estado novo. A ordem é a do back-end. Depois de uma remoção quem
+ * manda é a lista recarregada, nunca uma suposição do front sobre a SAGA.
+ */
 @Component({
   selector: 'app-gerentes',
   imports: [
