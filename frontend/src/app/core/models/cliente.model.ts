@@ -12,6 +12,18 @@ export interface Cliente extends NovoCliente {
  * Cliente como listado em `GET /clientes` (R11). `saldo` é `null` para cliente
  * sem conta (ou ausente), caso em que a linha exibe a ausência em vez de quebrar.
  */
+/**
+ * Cliente como listado em `GET /clientes` (R11). `saldo` é `null` para cliente
+ * sem conta (ou ausente), caso em que a linha exibe a ausência em vez de quebrar.
+ */
+/**
+ * Cliente como listado em `GET /clientes` (R11). `saldo` é `null` para cliente
+ * sem conta (ou ausente), caso em que a linha exibe a ausência em vez de quebrar.
+ */
+/**
+ * Cliente como listado em `GET /clientes` (R11). `saldo` é `null` para cliente
+ * sem conta (ou ausente), caso em que a linha exibe a ausência em vez de quebrar.
+ */
 export interface ClienteListado {
   cpf: string;
   nome: string;
