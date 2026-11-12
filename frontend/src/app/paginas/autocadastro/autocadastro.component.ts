@@ -1,4 +1,5 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -7,8 +8,10 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { RouterLink } from '@angular/router';
 import { DateTime } from 'luxon';
+import { catchError, distinctUntilChanged, map, of, switchMap, tap } from 'rxjs';
 import { ErroApi } from '../../core/models/erro-api.model';
 import { NovoCliente } from '../../core/models/solicitacao.model';
+import { ZipCodeAddress, ZipCodeService } from '../../core/services/zip-code.service';
 import { ClienteService } from '../../core/services/cliente.service';
 import { CabecalhoComponent } from '../../shared/components/cabecalho/cabecalho.component';
 import { MensagemErroComponent } from '../../shared/components/mensagem-erro/mensagem-erro.component';
@@ -24,6 +27,8 @@ export const UNIDADES_FEDERATIVAS = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG',
   'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO',
 ] as const;
+
+type ZipCodeLookupState = 'idle' | 'loading' | 'notFound' | 'failed';
 
 interface ResumoDaSolicitacao {
   nome: string;
@@ -72,6 +77,22 @@ export class AutocadastroComponent {
   protected readonly enviando = signal(false);
   protected readonly erro = signal<string | null>(null);
   protected readonly resumo = signal<ResumoDaSolicitacao | null>(null);
+  protected readonly zipCodeLookup = signal<ZipCodeLookupState>('idle');
+
+  private readonly numberInput = viewChild<ElementRef<HTMLInputElement>>('numberInput');
+  private readonly zipCodeService = inject(ZipCodeService);
+
+  constructor() {
+    this.formulario.controls.cep.valueChanges
+      .pipe(
+        map(apenasDigitos),
+        distinctUntilChanged(),
+        tap(() => this.zipCodeLookup.set('idle')),
+        switchMap((zipCode) => (zipCode.length === 8 ? this.lookupZipCode(zipCode) : of(null))),
+        takeUntilDestroyed(),
+      )
+      .subscribe();
+  }
 
   protected mascararCpf(): void {
     this.reescrever('cpf', mascaraCpf);
@@ -116,6 +137,44 @@ export class AutocadastroComponent {
         this.direcionarErro(falha.message);
       },
     });
+  }
+
+  private lookupZipCode(zipCode: string) {
+    this.zipCodeLookup.set('loading');
+
+    return this.zipCodeService.lookup(zipCode).pipe(
+      tap((address) => {
+        if (address === null) {
+          this.zipCodeLookup.set('notFound');
+          return;
+        }
+
+        this.zipCodeLookup.set('idle');
+        this.fillAddress(address);
+      }),
+      catchError(() => {
+        this.zipCodeLookup.set('failed');
+        return of(null);
+      }),
+    );
+  }
+
+  private fillAddress(address: ZipCodeAddress): void {
+    const { logradouro, cidade, uf } = this.formulario.controls;
+
+    if (address.street) {
+      logradouro.setValue(address.street.slice(0, 120));
+    }
+
+    if (address.city) {
+      cidade.setValue(address.city.slice(0, 80));
+    }
+
+    if ((UNIDADES_FEDERATIVAS as readonly string[]).includes(address.state)) {
+      uf.setValue(address.state);
+    }
+
+    this.numberInput()?.nativeElement.focus();
   }
 
   private montarPayload(): NovoCliente | null {
