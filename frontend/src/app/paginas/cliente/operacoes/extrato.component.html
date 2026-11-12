@@ -16,16 +16,36 @@
     <form class="filtro" [formGroup]="formulario" (ngSubmit)="consultar()" novalidate>
       <mat-form-field appearance="outline">
         <mat-label>Data de início</mat-label>
-        <input matInput class="numerico" type="date" formControlName="dataInicio" />
-        @if (formulario.controls.dataInicio.hasError('required')) {
+        <input
+          matInput
+          class="numerico"
+          formControlName="dataInicio"
+          placeholder="dd/mm/aaaa"
+          [matDatepicker]="startPicker"
+        />
+        <mat-datepicker-toggle matIconSuffix [for]="startPicker" />
+        <mat-datepicker #startPicker />
+        @if (formulario.controls.dataInicio.hasError('matDatepickerParse')) {
+          <mat-error>Use o formato dd/mm/aaaa.</mat-error>
+        } @else if (formulario.controls.dataInicio.hasError('required')) {
           <mat-error>Informe a data de início.</mat-error>
         }
       </mat-form-field>
 
       <mat-form-field appearance="outline">
         <mat-label>Data de fim</mat-label>
-        <input matInput class="numerico" type="date" formControlName="dataFim" />
-        @if (formulario.controls.dataFim.hasError('required')) {
+        <input
+          matInput
+          class="numerico"
+          formControlName="dataFim"
+          placeholder="dd/mm/aaaa"
+          [matDatepicker]="endPicker"
+        />
+        <mat-datepicker-toggle matIconSuffix [for]="endPicker" />
+        <mat-datepicker #endPicker />
+        @if (formulario.controls.dataFim.hasError('matDatepickerParse')) {
+          <mat-error>Use o formato dd/mm/aaaa.</mat-error>
+        } @else if (formulario.controls.dataFim.hasError('required')) {
           <mat-error>Informe a data de fim.</mat-error>
         }
       </mat-form-field>

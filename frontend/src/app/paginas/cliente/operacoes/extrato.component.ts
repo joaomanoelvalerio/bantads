@@ -7,9 +7,11 @@ import {
   Validators,
 } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { DateTime } from 'luxon';
 import { ErroApi } from '../../../core/models/erro-api.model';
 import { ContaService } from '../../../core/services/conta.service';
 import { SessaoService } from '../../../core/services/sessao.service';
@@ -36,6 +38,7 @@ const DIAS_INICIAIS_DO_FILTRO = 30;
   imports: [
     ReactiveFormsModule,
     MatButtonModule,
+    MatDatepickerModule,
     MatFormFieldModule,
     MatInputModule,
     MatProgressSpinnerModule,
@@ -54,13 +57,13 @@ export class ExtratoComponent {
   protected readonly carregandoConta = this.area.consultando;
   protected readonly erroDaConta = this.area.erro;
 
-  protected readonly formulario = inject(FormBuilder).nonNullable.group(
+  protected readonly formulario = inject(FormBuilder).group(
     {
       dataInicio: [
-        hojeNoFusoDoBanco().minus({ days: DIAS_INICIAIS_DO_FILTRO }).toFormat('yyyy-LL-dd'),
+        hojeNoFusoDoBanco().minus({ days: DIAS_INICIAIS_DO_FILTRO }) as DateTime | null,
         [Validators.required],
       ],
-      dataFim: [hojeNoFusoDoBanco().toFormat('yyyy-LL-dd'), [Validators.required]],
+      dataFim: [hojeNoFusoDoBanco() as DateTime | null, [Validators.required]],
     },
     { validators: periodoValidator },
   );
@@ -124,13 +127,20 @@ export class ExtratoComponent {
     }
 
     const { dataInicio, dataFim } = this.formulario.getRawValue();
-    const inicio = diaDeIso(dataInicio);
-    const fim = diaDeIso(dataFim);
+    const startIso = toIsoDate(dataInicio);
+    const endIso = toIsoDate(dataFim);
+
+    if (startIso === null || endIso === null) {
+      return;
+    }
+
+    const inicio = diaDeIso(startIso);
+    const fim = diaDeIso(endIso);
 
     this.consultando.set(true);
     this.erro.set(null);
 
-    this.contas.consultarExtrato(numero, dataInicio, dataFim).subscribe({
+    this.contas.consultarExtrato(numero, startIso, endIso).subscribe({
       next: (extrato) => {
         this.dias.set(montarLinhaDoTempo(extrato, cpf, inicio, fim));
         this.periodoConsultado.set(
@@ -152,20 +162,20 @@ export class ExtratoComponent {
   }
 }
 
+function toIsoDate(value: unknown): string | null {
+  return value instanceof DateTime && value.isValid ? value.toISODate() : null;
+}
+
 function periodoValidator(grupo: AbstractControl): ValidationErrors | null {
-  const inicioBruto: unknown = grupo.get('dataInicio')?.value;
-  const fimBruto: unknown = grupo.get('dataFim')?.value;
+  const startIso = toIsoDate(grupo.get('dataInicio')?.value);
+  const endIso = toIsoDate(grupo.get('dataFim')?.value);
 
-  if (typeof inicioBruto !== 'string' || typeof fimBruto !== 'string') {
+  if (startIso === null || endIso === null) {
     return null;
   }
 
-  if (inicioBruto.length === 0 || fimBruto.length === 0) {
-    return null;
-  }
-
-  const inicio = diaDeIso(inicioBruto);
-  const fim = diaDeIso(fimBruto);
+  const inicio = diaDeIso(startIso);
+  const fim = diaDeIso(endIso);
 
   if (!inicio.isValid || !fim.isValid) {
     return { periodoInvalido: true };
