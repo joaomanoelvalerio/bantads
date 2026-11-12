@@ -70,7 +70,7 @@
                 }
               </mat-form-field>
 
-              <mat-form-field appearance="outline" class="grade__largo">
+              <mat-form-field appearance="outline" class="grade__largo" subscriptSizing="dynamic">
                 <mat-label>E-mail</mat-label>
                 <input matInput type="email" formControlName="email" autocomplete="email" />
                 @if (erroDoServidor(formulario.controls.email); as mensagem) {
@@ -82,7 +82,7 @@
                 }
               </mat-form-field>
 
-              <mat-form-field appearance="outline">
+              <mat-form-field appearance="outline" subscriptSizing="dynamic">
                 <mat-label>CPF</mat-label>
                 <input
                   matInput
@@ -158,6 +158,23 @@
                   autocomplete="postal-code"
                   (input)="mascararCep()"
                 />
+                @if (zipCodeLookup() === 'loading') {
+                  <mat-progress-spinner
+                    matSuffix
+                    class="zip-code__spinner"
+                    mode="indeterminate"
+                    [diameter]="18"
+                    aria-label="Buscando endereço"
+                  />
+                }
+                @switch (zipCodeLookup()) {
+                  @case ('notFound') {
+                    <mat-hint class="zip-code__warning">CEP não encontrado. Preencha o endereço manualmente.</mat-hint>
+                  }
+                  @case ('failed') {
+                    <mat-hint class="zip-code__warning">Não foi possível buscar o endereço. Preencha manualmente.</mat-hint>
+                  }
+                }
                 @if (formulario.controls.cep.hasError('required')) {
                   <mat-error>Informe o CEP.</mat-error>
                 } @else if (formulario.controls.cep.hasError('pattern')) {
@@ -167,7 +184,13 @@
 
               <mat-form-field appearance="outline">
                 <mat-label>Número</mat-label>
-                <input matInput type="text" formControlName="numero" [attr.maxlength]="10" />
+                <input
+                  #numberInput
+                  matInput
+                  type="text"
+                  formControlName="numero"
+                  [attr.maxlength]="10"
+                />
                 @if (formulario.controls.numero.hasError('required')) {
                   <mat-error>Informe o número.</mat-error>
                 } @else if (formulario.controls.numero.hasError('maxlength')) {

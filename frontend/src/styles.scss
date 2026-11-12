@@ -104,6 +104,10 @@ h3 {
   outline-offset: 2px;
 }
 
+.mat-mdc-form-field-subscript-dynamic-size {
+  min-height: var(--mat-form-field-subscript-text-line-height, var(--mat-sys-body-small-line-height));
+}
+
 .mat-mdc-form-field-input-control.numerico {
   font-family: var(--bantads-fonte-numero);
 }
