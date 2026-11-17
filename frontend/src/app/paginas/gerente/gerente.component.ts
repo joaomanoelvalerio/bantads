@@ -44,7 +44,7 @@ interface LinhaDaTabela {
 const ROTULO_DO_STATUS: Readonly<Record<StatusSolicitacao, string>> = {
   PENDENTE: 'Pendente',
   APROVADO: 'Aprovado',
-  NAO_APROVADO: 'Não aprovado',
+  NAO_APROVADA: 'Não aprovado',
 };
 
 const STATUS_DESCONHECIDO = 'Status não reconhecido';
@@ -53,7 +53,7 @@ const FILTROS: readonly { valor: FiltroDeStatus; rotulo: string }[] = [
   { valor: 'TODAS', rotulo: 'Todas' },
   { valor: 'PENDENTE', rotulo: 'Pendentes' },
   { valor: 'APROVADO', rotulo: 'Aprovadas' },
-  { valor: 'NAO_APROVADO', rotulo: 'Não aprovadas' },
+  { valor: 'NAO_APROVADA', rotulo: 'Não aprovadas' },
 ];
 
 /**

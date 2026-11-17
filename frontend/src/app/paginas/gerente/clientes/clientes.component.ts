@@ -13,8 +13,8 @@ import { DocumentoPipe } from '../../../shared/pipes/documento.pipe';
 import { MoedaPipe } from '../../../shared/pipes/moeda.pipe';
 
 /**
- * R11. O contrato de `GET /clientes` não prevê parâmetro de busca, então a
- * pesquisa filtra a lista já carregada: sem nova requisição, sem reordenar e sem
+ * R11. O back-end aceita `busca` em `GET /clientes`, mas a tela prefere
+ * filtrar a lista já carregada: sem nova requisição, sem reordenar e sem
  * alterar a lista original.
  */
 @Component({

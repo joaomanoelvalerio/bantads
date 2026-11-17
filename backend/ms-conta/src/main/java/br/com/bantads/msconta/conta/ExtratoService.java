@@ -34,8 +34,9 @@ public class ExtratoService {
         this.movimentacaoRepository = movimentacaoRepository;
     }
 
-    public ExtratoResponse consultar(String numeroConta, String cpfSolicitante, LocalDate dataInicio, LocalDate dataFim) {
-        Conta conta = contaService.buscarEVerificarPosse(numeroConta, cpfSolicitante);
+    public ExtratoResponse consultar(
+            String numeroConta, String cpfSolicitante, String tipoSolicitante, LocalDate dataInicio, LocalDate dataFim) {
+        Conta conta = contaService.buscarParaExtrato(numeroConta, cpfSolicitante, tipoSolicitante);
 
         LocalDate fim = dataFim != null ? dataFim : LocalDate.now(FUSO);
         LocalDate inicio = dataInicio != null ? dataInicio : fim.minusDays(PADRAO_DIAS - 1);
@@ -44,7 +45,7 @@ public class ExtratoService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Data início não pode ser depois da data fim");
         }
         if (ChronoUnit.DAYS.between(inicio, fim) > MAXIMO_DIAS) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Intervalo máximo permitido é de 365 dias");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Intervalo máximo permitido é de 365 dias");
         }
 
         OffsetDateTime corteInicio = inicio.atStartOfDay(FUSO).toOffsetDateTime();

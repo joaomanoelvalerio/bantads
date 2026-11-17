@@ -9,7 +9,7 @@ interface RotaPublica {
 /** Endpoints acessíveis sem sessão: autenticação e autocadastro. */
 const ROTAS_PUBLICAS: readonly RotaPublica[] = [
   { metodo: 'POST', caminho: '/login' },
-  { metodo: 'POST', caminho: '/clientes' },
+  { metodo: 'POST', caminho: '/solicitacoes' },
 ];
 
 export function ehRotaPublica(requisicao: HttpRequest<unknown>): boolean {

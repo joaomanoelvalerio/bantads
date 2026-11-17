@@ -22,6 +22,11 @@ public class SolicitacaoService {
         return solicitacaoRepository.findAllByOrderByCriadoEmDesc();
     }
 
+    /** R8 — consulta uma solicitação específica por CPF. */
+    public Optional<Solicitacao> buscarPorCpf(String cpf) {
+        return solicitacaoRepository.findFirstByCpfOrderByCriadoEmDesc(cpf);
+    }
+
     /** SAGA Aprovar Cliente (R9, passo 1) — devolve os dados pro Orquestrador compor os próximos passos. */
     public Optional<Solicitacao> aprovarPendente(String cpf) {
         Optional<Solicitacao> pendente = solicitacaoRepository.findFirstByCpfAndStatus(cpf, StatusSolicitacao.PENDENTE);
@@ -92,12 +97,12 @@ public class SolicitacaoService {
         solicitacao.setEmail(requisicao.getEmail());
         solicitacao.setTelefone(requisicao.getTelefone());
         solicitacao.setSalario(requisicao.getSalario());
-        solicitacao.setLogradouro(requisicao.getLogradouro());
-        solicitacao.setNumero(requisicao.getNumero());
-        solicitacao.setComplemento(requisicao.getComplemento());
-        solicitacao.setCep(requisicao.getCep());
-        solicitacao.setCidade(requisicao.getCidade());
-        solicitacao.setUf(requisicao.getUf());
+        solicitacao.setLogradouro(requisicao.getEndereco().getLogradouro());
+        solicitacao.setNumero(requisicao.getEndereco().getNumero());
+        solicitacao.setComplemento(requisicao.getEndereco().getComplemento());
+        solicitacao.setCep(requisicao.getEndereco().getCep());
+        solicitacao.setCidade(requisicao.getEndereco().getCidade());
+        solicitacao.setUf(requisicao.getEndereco().getUf());
         solicitacao.setStatus(StatusSolicitacao.PENDENTE);
         solicitacao.setCriadoEm(OffsetDateTime.now());
 

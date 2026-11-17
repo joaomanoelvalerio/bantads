@@ -85,7 +85,7 @@ public class OperacaoContaService {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Não é possível transferir para a própria conta");
         }
         Conta destino = contaRepository.findById(requisicao.getContaDestino())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conta destino não encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Conta destino não encontrada"));
 
         BigDecimal valor = requisicao.getValor();
         // Cada lado do payload carrega tanto o próprio nome quanto o da ponta

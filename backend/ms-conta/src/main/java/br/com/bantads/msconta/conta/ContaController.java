@@ -3,7 +3,9 @@ package br.com.bantads.msconta.conta;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -58,32 +60,32 @@ public class ContaController {
 
     /** R4 — não devolve o novo saldo; front reconsulta GET /contas/{numeroConta} depois. */
     @PostMapping("/{numeroConta}/deposito")
-    public ResponseEntity<Void> depositar(
+    public ResponseEntity<Map<String, Object>> depositar(
             @PathVariable String numeroConta,
             @RequestHeader("X-User-CPF") String cpfSolicitante,
             @Valid @RequestBody DepositoRequest requisicao) {
         operacaoContaService.depositar(numeroConta, cpfSolicitante, requisicao.getValor());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of());
     }
 
     /** R5 — 422 se saldo insuficiente. */
     @PostMapping("/{numeroConta}/saque")
-    public ResponseEntity<Void> sacar(
+    public ResponseEntity<Map<String, Object>> sacar(
             @PathVariable String numeroConta,
             @RequestHeader("X-User-CPF") String cpfSolicitante,
             @Valid @RequestBody SaqueRequest requisicao) {
         operacaoContaService.sacar(numeroConta, cpfSolicitante, requisicao.getValor());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of());
     }
 
-    /** R6 — 404 se conta destino não existe, 422 se saldo insuficiente. */
+    /** R6 — 422 se conta destino não existe ou se saldo insuficiente. */
     @PostMapping("/{numeroConta}/transferencia")
-    public ResponseEntity<Void> transferir(
+    public ResponseEntity<Map<String, Object>> transferir(
             @PathVariable String numeroConta,
             @RequestHeader("X-User-CPF") String cpfSolicitante,
             @Valid @RequestBody TransferenciaRequest requisicao) {
         operacaoContaService.transferir(numeroConta, cpfSolicitante, requisicao);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of());
     }
 
     /** R7 — padrão: últimos 30 dias; máximo 365 dias de intervalo. */
@@ -91,8 +93,9 @@ public class ContaController {
     public ExtratoResponse extrato(
             @PathVariable String numeroConta,
             @RequestHeader("X-User-CPF") String cpfSolicitante,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
-        return extratoService.consultar(numeroConta, cpfSolicitante, dataInicio, dataFim);
+            @RequestHeader("X-User-Tipo") String tipoSolicitante,
+            @RequestParam(name = "inicio", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+            @RequestParam(name = "fim", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
+        return extratoService.consultar(numeroConta, cpfSolicitante, tipoSolicitante, dataInicio, dataFim);
     }
 }

@@ -9,14 +9,18 @@ describe('ehRotaPublica', () => {
     expect(ehRotaPublica(requisicao)).toBe(true);
   });
 
-  it('reconhece POST /clientes (autocadastro) como pública', () => {
-    const requisicao = new HttpRequest('POST', `${environment.apiUrl}/clientes`, {});
+  it('reconhece POST /solicitacoes (autocadastro) como pública', () => {
+    const requisicao = new HttpRequest('POST', `${environment.apiUrl}/solicitacoes`, {});
 
     expect(ehRotaPublica(requisicao)).toBe(true);
   });
 
   it('ignora query string ao comparar o caminho', () => {
-    const requisicao = new HttpRequest('POST', `${environment.apiUrl}/clientes?origem=teste`, {});
+    const requisicao = new HttpRequest(
+      'POST',
+      `${environment.apiUrl}/solicitacoes?origem=teste`,
+      {},
+    );
 
     expect(ehRotaPublica(requisicao)).toBe(true);
   });
@@ -39,18 +43,18 @@ describe('ehRotaPublica', () => {
     expect(ehRotaPublica(requisicao)).toBe(false);
   });
 
-  it('não reconhece rotas fora da lista, como /solicitacoes', () => {
+  it('não reconhece rotas fora da lista, como /solicitacoes/{cpf}/aprovacao', () => {
     const requisicao = new HttpRequest(
       'POST',
-      `${environment.apiUrl}/solicitacoes/123/aprovar`,
+      `${environment.apiUrl}/solicitacoes/123/aprovacao`,
       {},
     );
 
     expect(ehRotaPublica(requisicao)).toBe(false);
   });
 
-  it('é sensível ao método, não só ao caminho — PUT /clientes não é público', () => {
-    const requisicao = new HttpRequest('PUT', `${environment.apiUrl}/clientes`, {});
+  it('é sensível ao método, não só ao caminho — PUT /solicitacoes não é público', () => {
+    const requisicao = new HttpRequest('PUT', `${environment.apiUrl}/solicitacoes`, {});
 
     expect(ehRotaPublica(requisicao)).toBe(false);
   });

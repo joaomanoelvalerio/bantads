@@ -16,8 +16,8 @@ export class SolicitacaoService {
   /** Lista as solicitações em todos os estados: Pendente, Aprovado e Não aprovado. */
   listar(): Observable<readonly SolicitacaoAnalisada[]> {
     return this.api
-      .get<readonly SolicitacaoDto[]>('/solicitacoes')
-      .pipe(map((solicitacoes) => solicitacoes.map(normalizarSolicitacao)));
+      .get<{ solicitacoes: readonly SolicitacaoDto[] }>('/solicitacoes')
+      .pipe(map((resposta) => resposta.solicitacoes.map(normalizarSolicitacao)));
   }
 
   /**
@@ -25,7 +25,7 @@ export class SolicitacaoService {
    * não vem daqui: quem acompanha é o JobsService.
    */
   aprovar(cpf: string): Observable<RespostaAceita> {
-    return this.api.post<RespostaAceita>(`/solicitacoes/${encodeURIComponent(cpf)}/aprovar`, {});
+    return this.api.post<RespostaAceita>(`/solicitacoes/${encodeURIComponent(cpf)}/aprovacao`, {});
   }
 
   /**
@@ -34,6 +34,6 @@ export class SolicitacaoService {
    * recarrega a lista.
    */
   rejeitar(cpf: string, motivo: string): Observable<void> {
-    return this.api.post<void>(`/solicitacoes/${encodeURIComponent(cpf)}/rejeitar`, { motivo });
+    return this.api.post<void>(`/solicitacoes/${encodeURIComponent(cpf)}/rejeicao`, { motivo });
   }
 }

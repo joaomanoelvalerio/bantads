@@ -57,7 +57,7 @@ export class RelatorioClientesComponent {
       .pipe(
         // O jobId vem do corpo do 202 e de mais lugar nenhum.
         switchMap((aceite) =>
-          this.jobs.acompanhar<readonly LinhaDoRelatorio[]>(aceite.jobId, this.destruicao),
+          this.jobs.acompanhar<{ clientes: readonly LinhaDoRelatorio[] }>(aceite.jobId, this.destruicao),
         ),
         takeUntilDestroyed(this.destruicao),
       )
@@ -72,15 +72,15 @@ export class RelatorioClientesComponent {
       });
   }
 
-  private tratarDesfecho(desfecho: DesfechoDoJob<readonly LinhaDoRelatorio[]>): void {
+  private tratarDesfecho(desfecho: DesfechoDoJob<{ clientes: readonly LinhaDoRelatorio[] }>): void {
     switch (desfecho.tipo) {
       case 'CONCLUIDO':
-        if (!Array.isArray(desfecho.resultado)) {
+        if (!Array.isArray(desfecho.resultado?.clientes)) {
           this.falhar(FORMATO_INESPERADO);
           return;
         }
 
-        this.linhas.set(desfecho.resultado);
+        this.linhas.set(desfecho.resultado.clientes);
         this.situacao.set('PRONTO');
         break;
 

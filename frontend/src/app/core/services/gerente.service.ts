@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { AlteracaoDeGerente, Gerente, NovoGerente } from '../models/gerente.model';
 import { RespostaAceita } from '../models/job.model';
 import { ApiService } from './api.service';
@@ -11,7 +11,9 @@ export class GerenteService {
 
   /** Gerentes ativos, já ordenados por nome pelo back-end. */
   listar(): Observable<readonly Gerente[]> {
-    return this.api.get<readonly Gerente[]>('/gerentes');
+    return this.api
+      .get<{ gerentes: readonly Gerente[] }>('/gerentes')
+      .pipe(map((resposta) => resposta.gerentes));
   }
 
   consultar(cpf: string): Observable<Gerente> {

@@ -6,12 +6,14 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * R13 (inserção) não tem endpoint
@@ -39,9 +41,17 @@ public class GerenteController {
         return gerenteService.buscarPorCpf(cpf);
     }
 
-    /** R14 — síncrono; CPF/e-mail não vêm no corpo porque não são alteráveis. */
+    /**
+     * R14 — síncrono; CPF/e-mail não são alteráveis. `email` é aceito no DTO só
+     * para poder rejeitar explicitamente (400) uma tentativa de alterá-lo, em
+     * vez de silenciosamente ignorá-lo como o Jackson faria com um campo
+     * desconhecido.
+     */
     @PutMapping("/{cpf}")
     public Gerente atualizar(@PathVariable String cpf, @Valid @RequestBody AtualizacaoGerenteRequest requisicao) {
+        if (requisicao.getEmail() != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "E-mail não pode ser alterado.");
+        }
         return gerenteService.atualizar(cpf, requisicao.getNome(), requisicao.getTelefone());
     }
 
@@ -55,5 +65,7 @@ public class GerenteController {
         @NotBlank
         @Size(max = 20)
         private String telefone;
+
+        private String email;
     }
 }

@@ -19,7 +19,7 @@ export interface Solicitacao extends NovoCliente {
   _links?: unknown;
 }
 
-export type StatusSolicitacao = 'PENDENTE' | 'APROVADO' | 'NAO_APROVADO';
+export type StatusSolicitacao = 'PENDENTE' | 'APROVADO' | 'NAO_APROVADA';
 
 /**
  * Solicitação como chega em `GET /solicitacoes` (R8). Mais estreita que a
@@ -79,8 +79,11 @@ export function statusDaSolicitacao(bruto: string): StatusSolicitacao | null {
     .toUpperCase()
     .replace(/\s+/g, '_');
 
-  if (chave === 'PENDENTE' || chave === 'APROVADO' || chave === 'NAO_APROVADO') {
+  if (chave === 'PENDENTE' || chave === 'APROVADO') {
     return chave;
+  }
+  if (chave === 'NAO_APROVADO' || chave === 'NAO_APROVADA') {
+    return 'NAO_APROVADA';
   }
 
   return null;

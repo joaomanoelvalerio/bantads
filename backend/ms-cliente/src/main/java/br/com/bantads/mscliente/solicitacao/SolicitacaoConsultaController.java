@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,10 +22,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * R8 — tela inicial do gerente: solicitações em todos os estados. Path
- * separado de `/clientes` (onde mora o POST de autocadastro, R1) porque o
- * recurso é outro (Solicitação, não Cliente) e o contrato do front já espera
- * `GET /solicitacoes` (`SolicitacaoService.listar()` no frontend).
+ * Tudo sob /solicitacoes: R1 (autocadastro, público — ver rotas-publicas.ts
+ * no frontend), R8 (listagem/consulta, GERENTE) e R10 (rejeição, GERENTE). R9
+ * (aprovação) é SAGA, entra só pelo Orquestrador via `ms.cliente.cmd` — ver
+ * `saga/ClienteComandoListener`.
  */
 @RestController
 @RequestMapping("/solicitacoes")
@@ -38,19 +39,34 @@ public class SolicitacaoConsultaController {
         this.rabbitTemplate = rabbitTemplate;
     }
 
+    /** R1 — Autocadastro. Público (sem sessão) por convenção do front. */
+    @PostMapping
+    public ResponseEntity<Solicitacao> autocadastrar(@Valid @RequestBody NovoClienteRequest requisicao) {
+        Solicitacao solicitacao = solicitacaoService.autocadastrar(requisicao);
+        return ResponseEntity.status(HttpStatus.CREATED).body(solicitacao);
+    }
+
+    /** R8 — todas as solicitações, em qualquer status. */
     @GetMapping
-    public List<Solicitacao> listar() {
-        return solicitacaoService.listarTodas();
+    public Map<String, List<Solicitacao>> listar() {
+        return Map.of("solicitacoes", solicitacaoService.listarTodas());
+    }
+
+    /** R8 — consulta uma solicitação específica. */
+    @GetMapping("/{cpf}")
+    public Solicitacao obter(@PathVariable String cpf) {
+        return solicitacaoService.buscarPorCpf(cpf)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitação não encontrada para o CPF " + cpf));
     }
 
     /**
-     * R10 — síncrono (200), diferente de R9: não é SAGA, não passa pelo
-     * Orquestrador. O e-mail é publicado direto daqui, fire-and-forget, sem
-     * `sagaId` —
-     * "mensagens fora de SAGA: não definir sagaId".
+     * R10 — síncrono (200, devolve a solicitação atualizada), diferente de
+     * R9: não é SAGA, não passa pelo Orquestrador. O e-mail é publicado
+     * direto daqui, fire-and-forget, sem `sagaId` — "mensagens fora de SAGA:
+     * não definir sagaId".
      */
-    @PostMapping("/{cpf}/rejeitar")
-    public void rejeitar(@PathVariable String cpf, @Valid @RequestBody RejeicaoRequest requisicao) {
+    @PostMapping("/{cpf}/rejeicao")
+    public Solicitacao rejeitar(@PathVariable String cpf, @Valid @RequestBody RejeicaoRequest requisicao) {
         Optional<Solicitacao> rejeitada = solicitacaoService.rejeitarPendente(cpf, requisicao.getMotivo());
         Solicitacao solicitacao = rejeitada.orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Solicitação Pendente não encontrada para o CPF " + cpf));
@@ -59,6 +75,8 @@ public class SolicitacaoConsultaController {
                 null, "email.notificar-falha-solicitacao", OffsetDateTime.now().toString(),
                 Map.of("email", solicitacao.getEmail(), "motivo", requisicao.getMotivo()));
         rabbitTemplate.convertAndSend(RabbitMqConfig.FILA_EMAIL, mensagem);
+
+        return solicitacao;
     }
 
     @Getter

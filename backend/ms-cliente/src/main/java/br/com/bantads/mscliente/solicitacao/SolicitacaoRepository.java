@@ -15,4 +15,7 @@ public interface SolicitacaoRepository extends JpaRepository<Solicitacao, Long> 
      * mesmo que o CPF tenha histórico de tentativas anteriores.
      */
     Optional<Solicitacao> findFirstByCpfAndStatus(String cpf, StatusSolicitacao status);
+
+    /** R8 — consulta por CPF (a mais recente, caso haja histórico de tentativas). */
+    Optional<Solicitacao> findFirstByCpfOrderByCriadoEmDesc(String cpf);
 }

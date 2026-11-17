@@ -55,8 +55,8 @@ public class LinksAdvice implements ResponseBodyAdvice<Object> {
         } else if (recurso instanceof Solicitacao solicitacao) {
             links.put("solicitacoes", link("/solicitacoes"));
             if (solicitacao.getStatus() == StatusSolicitacao.PENDENTE) {
-                links.put("aprovar", link("/solicitacoes/" + solicitacao.getCpf() + "/aprovar"));
-                links.put("rejeitar", link("/solicitacoes/" + solicitacao.getCpf() + "/rejeitar"));
+                links.put("aprovacao", link("/solicitacoes/" + solicitacao.getCpf() + "/aprovacao"));
+                links.put("rejeicao", link("/solicitacoes/" + solicitacao.getCpf() + "/rejeicao"));
             } else if (solicitacao.getStatus() == StatusSolicitacao.APROVADO) {
                 links.put("cliente", link("/clientes/" + solicitacao.getCpf()));
             }

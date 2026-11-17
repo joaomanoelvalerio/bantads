@@ -23,7 +23,7 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 
 app.get("/health", (req, res) => {
-  res.status(200).send("OK");
+  res.status(200).json({ status: "UP" });
 });
 
 // POST /reboot — público, sem autenticação.
@@ -126,8 +126,8 @@ function proxyPara(caminho, destino) {
 // composição do próprio login e na resolução do recurso de um job do R9).
 const ROTAS_SOMENTE_GERENTE = [
   { metodo: "GET", padrao: /^\/solicitacoes\/?$/ }, // R8
-  { metodo: "POST", padrao: /^\/solicitacoes\/[^/]+\/aprovar$/ }, // R9
-  { metodo: "POST", padrao: /^\/solicitacoes\/[^/]+\/rejeitar$/ }, // R10
+  { metodo: "POST", padrao: /^\/solicitacoes\/[^/]+\/aprovacao$/ }, // R9
+  { metodo: "POST", padrao: /^\/solicitacoes\/[^/]+\/rejeicao$/ }, // R10
   { metodo: "GET", padrao: /^\/clientes\/?$/ }, // R11
   { metodo: "GET", padrao: /^\/gerentes\/?$/ }, // R12
   { metodo: "POST", padrao: /^\/gerentes\/?$/ }, // R13
@@ -141,11 +141,11 @@ function exigeSessaoDeGerente(req) {
 }
 
 // A partir daqui, toda rota exige sessão válida — exceto o autocadastro
-// (POST /clientes), a única escrita pública além do login
+// (POST /solicitacoes), a única escrita pública além do login
 // (R1; front espelha isto em
 // rotas-publicas.ts).
 app.use(async (req, res, next) => {
-  if (req.method === "POST" && req.path === "/clientes") {
+  if (req.method === "POST" && req.path === "/solicitacoes") {
     return next();
   }
 
@@ -169,7 +169,7 @@ app.use(async (req, res, next) => {
 
 app.post("/logout", async (req, res) => {
   await sessao.encerrarSessao(req.headers["x-access-token"], req.usuario.cpf, req.usuario.jti);
-  res.sendStatus(200);
+  res.sendStatus(204);
 });
 
 async function nomeDoCliente(cpf) {
@@ -206,7 +206,7 @@ app.post("/contas/:numero/transferencia", express.json(), async (req, res) => {
   try {
     const respostaContaDestino = await fetch(`${CONTA_MS_API_URL}/contas/${encodeURIComponent(contaDestino)}`);
     if (respostaContaDestino.status === 404) {
-      return res.status(404).json({ message: "Conta destino não encontrada." });
+      return res.status(422).json({ message: "Conta destino não encontrada." });
     }
     if (respostaContaDestino.status !== 200) {
       throw new Error(`MS Conta devolveu ${respostaContaDestino.status} ao resolver a conta destino`);
@@ -232,6 +232,9 @@ app.post("/contas/:numero/transferencia", express.json(), async (req, res) => {
       },
       body: JSON.stringify({ contaDestino, valor, nomeOrigem, nomeDestino }),
     });
+    if (respostaConta.status >= 200 && respostaConta.status < 300) {
+      return res.status(respostaConta.status).json({ destino: { nome: nomeDestino } });
+    }
     const corpo = await respostaConta.text();
     res.status(respostaConta.status);
     res.set("Content-Type", respostaConta.headers.get("Content-Type") ?? "application/json");
@@ -249,7 +252,7 @@ app.post("/contas/:numero/transferencia", express.json(), async (req, res) => {
 // transferência (R6) acima.
 const crypto = require("crypto");
 
-app.post("/solicitacoes/:cpf/aprovar", async (req, res) => {
+app.post("/solicitacoes/:cpf/aprovacao", async (req, res) => {
   const { cpf } = req.params;
   const jobId = crypto.randomUUID();
 
@@ -349,7 +352,7 @@ app.get("/gerentes", async (req, res) => {
       .map((gerente) => ({ ...gerente, quantidadeClientes: contagemPorCpf.get(gerente.cpf) ?? 0 }))
       .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
-    res.json(links.reescreverLinks(listado, links.origemPublica(req)));
+    res.json({ gerentes: links.reescreverLinks(listado, links.origemPublica(req)) });
   } catch (erro) {
     console.error("Falha ao compor a listagem de gerentes (R12):", erro.message);
     res.status(502).json({ message: "Falha ao consultar gerentes." });
@@ -357,7 +360,7 @@ app.get("/gerentes", async (req, res) => {
 });
 
 // R11 — API Composition: MS Cliente (todos) + MS Conta (saldo por cliente).
-// Busca por CPF/nome é feita pelo front, não há parâmetro aqui.
+// `busca` (opcional) filtra por nome (case-insensitive) ou CPF, no servidor.
 app.get("/clientes", async (req, res) => {
   try {
     const [clientesResp, contasResp] = await Promise.all([
@@ -367,10 +370,18 @@ app.get("/clientes", async (req, res) => {
     if (clientesResp.status !== 200) {
       throw new Error(`MS Cliente devolveu ${clientesResp.status}`);
     }
-    const clientes = await clientesResp.json();
+    let clientes = await clientesResp.json();
     const contas = contasResp.status === 200 ? await contasResp.json() : [];
     const saldoPorCpf = new Map(contas.map((conta) => [conta.cpfCliente, conta.saldo]));
     const origem = links.origemPublica(req);
+
+    const busca = typeof req.query.busca === "string" ? req.query.busca.trim() : "";
+    if (busca) {
+      const termo = busca.toLowerCase();
+      clientes = clientes.filter(
+        (cliente) => cliente.nome.toLowerCase().includes(termo) || cliente.cpf.includes(busca),
+      );
+    }
 
     const listado = clientes
       .map((cliente) => ({
@@ -386,10 +397,32 @@ app.get("/clientes", async (req, res) => {
       }))
       .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
-    res.json(listado);
+    res.json({ clientes: listado });
   } catch (erro) {
     console.error("Falha ao compor a listagem de clientes (R11):", erro.message);
     res.status(502).json({ message: "Falha ao consultar clientes." });
+  }
+});
+
+// R03 — Tela inicial do cliente: número da conta + saldo, via MS Conta
+// (GET /contas/cliente/{cpf}, já existente desde a Semana 4). Só o próprio
+// cliente pode ver sua conta — rota específica antes do proxy genérico de
+// /clientes, mesmo padrão de R6/R9/R13 acima.
+app.get("/clientes/:cpf/conta", async (req, res) => {
+  const { cpf } = req.params;
+  if (req.usuario.cpf !== cpf) {
+    return res.status(403).json({ message: "Acesso negado." });
+  }
+
+  try {
+    const resposta = await fetch(`${CONTA_MS_API_URL}/contas/cliente/${encodeURIComponent(cpf)}`);
+    const corpo = await resposta.text();
+    res.status(resposta.status);
+    res.set("Content-Type", resposta.headers.get("Content-Type") ?? "application/json");
+    res.send(links.reescreverLinksDoCorpo(corpo, resposta.headers.get("Content-Type"), links.origemPublica(req)));
+  } catch (erro) {
+    console.error(`Falha ao consultar a conta do cliente ${cpf}:`, erro.message);
+    res.status(502).json({ message: "Falha ao consultar a conta." });
   }
 });
 
@@ -431,7 +464,7 @@ app.get("/relatorios/clientes", async (req, res) => {
       })
       .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
 
-    await jobs.criarJobConcluidoInline(jobId, linhas);
+    await jobs.criarJobConcluidoInline(jobId, { clientes: linhas });
     res.status(202).json({ jobId });
   } catch (erro) {
     console.error("Falha ao gerar o relatório de clientes (R16):", erro.message);

@@ -10,7 +10,7 @@ export class ContaService {
 
   /** R3: o front não sabe o próprio número de conta de antemão — resolve pelo CPF da sessão. */
   consultarPorCpf(cpf: string): Observable<Conta> {
-    return this.api.get<Conta>(`/contas/cliente/${encodeURIComponent(cpf)}`);
+    return this.api.get<Conta>(`/clientes/${encodeURIComponent(cpf)}/conta`);
   }
 
   /**
@@ -34,7 +34,7 @@ export class ContaService {
 
   /** Datas no formato ISO `yyyy-MM-dd`, já resolvidas no fuso de São Paulo. */
   consultarExtrato(numero: string, dataInicio: string, dataFim: string): Observable<Extrato> {
-    const parametros = new URLSearchParams({ dataInicio, dataFim });
+    const parametros = new URLSearchParams({ inicio: dataInicio, fim: dataFim });
 
     return this.api.get<Extrato>(`${this.enderecoDaConta(numero)}/extrato?${parametros}`);
   }

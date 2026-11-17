@@ -68,6 +68,20 @@ public class ContaService {
     }
 
     /**
+     * R7 — diferente da posse exigida em R4/R5/R6 (operações, sempre só do
+     * próprio titular): o extrato também pode ser consultado por qualquer
+     * gerente, não só pelo titular da conta.
+     */
+    public Conta buscarParaExtrato(String numeroConta, String cpfSolicitante, String tipoSolicitante) {
+        Conta conta = buscarPorNumero(numeroConta);
+        boolean ehGerente = "GERENTE".equals(tipoSolicitante);
+        if (!ehGerente && !conta.getCpfCliente().equals(cpfSolicitante)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Conta não pertence ao usuário autenticado");
+        }
+        return conta;
+    }
+
+    /**
      * SAGA Aprovar Cliente (R9, passo 6) — número de 4 dígitos sorteado, único
      * (em colisão, sorteia de novo — R9); grava o evento Criado no command
      * side E o read model diretamente, sem esperar a projeção assíncrona: o
